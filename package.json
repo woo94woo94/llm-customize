@@ -1,0 +1,26 @@
+{
+  "name": "llm-customize",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "native": "tsc && node dist/examples/native-example.js",
+    "langchain": "tsc && node dist/examples/langchain-example.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.78",
+    "@langchain/langgraph": "^0.4.9",
+    "@langchain/openai": "^0.6.14",
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.3"
+  }
+}
