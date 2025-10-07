@@ -33,7 +33,7 @@ import type {
  */
 export class ApiClient {
   private axiosInstance: AxiosInstance;
-  private config: Required<GptClientConfig>;
+  private config: GptClientConfig;
 
   constructor(config: GptClientConfig) {
     if (!config.apiUrl) {
@@ -42,10 +42,7 @@ export class ApiClient {
       );
     }
 
-    this.config = {
-      ...config,
-      apiUrl: config.apiUrl,
-    };
+    this.config = config;
 
     this.axiosInstance = axios.create({
       baseURL: this.config.apiUrl,
@@ -56,19 +53,27 @@ export class ApiClient {
   }
 
   /**
-   * Authorization 헤더 생성: JSON을 Base64로 인코딩
+   * Authorization 헤더 생성
+   * - customAuth가 있으면: JSON을 Base64로 인코딩 (커스텀 GPT API)
+   * - customAuth가 없으면: 평문 API 키 사용 (표준 OpenAI API)
    */
   private createAuthHeader(): string {
-    const authJson = {
-      apiKey: this.config.apiKey,
-      systemCode: this.config.systemCode,
-      companyCode: this.config.companyCode,
-    };
+    if (this.config.customAuth) {
+      // 커스텀 GPT API 방식: base64 인코딩
+      const authJson = {
+        apiKey: this.config.apiKey,
+        systemCode: this.config.customAuth.systemCode,
+        companyCode: this.config.customAuth.companyCode,
+      };
 
-    const jsonString = JSON.stringify(authJson);
-    const base64Encoded = Buffer.from(jsonString).toString("base64");
+      const jsonString = JSON.stringify(authJson);
+      const base64Encoded = Buffer.from(jsonString).toString("base64");
 
-    return `Bearer ${base64Encoded}`;
+      return `Bearer ${base64Encoded}`;
+    } else {
+      // 표준 OpenAI API 방식: 평문 API 키
+      return `Bearer ${this.config.apiKey}`;
+    }
   }
 
   /**
@@ -76,14 +81,21 @@ export class ApiClient {
    */
   async chat(request: GptRequest): Promise<string> {
     try {
+      // 요청 바디 구성
+      const requestBody: any = {
+        messages: request.messages,
+        model: request.model || "gpt-4o",
+        temperature: request.temperature ?? 0.7,
+      };
+
+      // 커스텀 GPT API인 경우에만 topK 추가
+      if (this.config.customAuth) {
+        requestBody.topK = request.topK ?? 5;
+      }
+
       const response = await this.axiosInstance.post<GptResponse>(
         "",
-        {
-          messages: request.messages,
-          model: request.model || "gpt-4o",
-          temperature: request.temperature ?? 0.7,
-          topK: request.topK ?? 5,
-        },
+        requestBody,
         {
           headers: {
             Authorization: this.createAuthHeader(),

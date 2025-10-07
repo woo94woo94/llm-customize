@@ -4,12 +4,16 @@
 
 /**
  * GPT API 클라이언트 설정
+ * - customAuth가 있으면 커스텀 GPT API (base64 인코딩 방식)
+ * - 없으면 표준 OpenAI API (평문 API 키 방식)
  */
 export interface GptClientConfig {
   apiKey: string;
-  systemCode: string;
-  companyCode: string;
   apiUrl: string;
+  customAuth?: {
+    systemCode: string;
+    companyCode: string;
+  };
 }
 
 /**

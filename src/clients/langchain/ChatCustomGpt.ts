@@ -35,9 +35,11 @@ interface ChatCustomGptParams extends BaseChatModelParams, GptClientConfig {
  */
 export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   apiKey: string;
-  systemCode: string;
-  companyCode: string;
   apiUrl: string;
+  customAuth?: {
+    systemCode: string;
+    companyCode: string;
+  };
   model: string;
   temperature: number;
   topK: number;
@@ -56,28 +58,37 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     }
 
     this.apiKey = fields.apiKey;
-    this.systemCode = fields.systemCode;
-    this.companyCode = fields.companyCode;
     this.apiUrl = fields.apiUrl;
+    if (fields.customAuth) {
+      this.customAuth = fields.customAuth;
+    }
     this.model = fields.model || "gpt-4o";
     this.temperature = fields.temperature ?? 0.7;
     this.topK = fields.topK ?? 5;
   }
 
   /**
-   * Authorization 헤더 생성: JSON을 Base64로 인코딩
+   * Authorization 헤더 생성
+   * - customAuth가 있으면: JSON을 Base64로 인코딩 (커스텀 GPT API)
+   * - customAuth가 없으면: 평문 API 키 사용 (표준 OpenAI API)
    */
   private createAuthHeader(): string {
-    const authJson = {
-      apiKey: this.apiKey,
-      systemCode: this.systemCode,
-      companyCode: this.companyCode,
-    };
+    if (this.customAuth) {
+      // 커스텀 GPT API 방식: base64 인코딩
+      const authJson = {
+        apiKey: this.apiKey,
+        systemCode: this.customAuth.systemCode,
+        companyCode: this.customAuth.companyCode,
+      };
 
-    const jsonString = JSON.stringify(authJson);
-    const base64Encoded = Buffer.from(jsonString).toString("base64");
+      const jsonString = JSON.stringify(authJson);
+      const base64Encoded = Buffer.from(jsonString).toString("base64");
 
-    return `Bearer ${base64Encoded}`;
+      return `Bearer ${base64Encoded}`;
+    } else {
+      // 표준 OpenAI API 방식: 평문 API 키
+      return `Bearer ${this.apiKey}`;
+    }
   }
 
   /**
@@ -117,12 +128,17 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
 
     const formattedMessages = this.formatMessages(messages);
 
-    const requestBody = {
+    // 요청 바디 구성
+    const requestBody: any = {
       messages: formattedMessages,
       model: this.model,
       temperature: this.temperature,
-      topK: this.topK,
     };
+
+    // 커스텀 GPT API인 경우에만 topK 추가
+    if (this.customAuth) {
+      requestBody.topK = this.topK;
+    }
 
     try {
       const response = await fetch(this.apiUrl, {
