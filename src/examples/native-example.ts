@@ -69,6 +69,28 @@ async function main() {
   } catch (error) {
     console.error("에러 발생:", error);
   }
+
+  console.log("\n" + "=".repeat(50) + "\n");
+
+  // 예제 4: 스트리밍 응답
+  console.log("📝 예제 4: 스트리밍 응답");
+  console.log("질문: LangChain에 대해 간단히 설명해주세요.");
+  console.log("\n답변: ");
+
+  try {
+    const stream = client.chatStream({
+      messages: [
+        { role: "user", content: "LangChain에 대해 간단히 설명해주세요." },
+      ],
+    });
+
+    for await (const chunk of stream) {
+      process.stdout.write(chunk);
+    }
+    console.log("\n");
+  } catch (error) {
+    console.error("에러 발생:", error);
+  }
 }
 
 // 실행
