@@ -8,6 +8,8 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { GptClientConfig, GptResponse } from "../../types/index.js";
+import type { StructuredToolInterface } from "@langchain/core/tools";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 interface ChatCustomGptOptions extends BaseChatModelCallOptions {}
 
@@ -44,6 +46,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   model: string;
   temperature: number;
   topK: number;
+  tools?: StructuredToolInterface[];
 
   static lc_name(): string {
     return "ChatCustomGpt";
@@ -141,6 +144,26 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       requestBody.topK = this.topK;
     }
 
+    // tools가 있으면 OpenAI API 형식으로 추가
+    if (this.tools && this.tools.length > 0) {
+      requestBody.tools = this.tools.map((tool) => {
+        // Zod schema인 경우 JSON Schema로 변환
+        let parameters = tool.schema;
+        if (parameters && typeof parameters === "object" && "_def" in parameters) {
+          parameters = zodToJsonSchema(parameters as any);
+        }
+
+        return {
+          type: "function",
+          function: {
+            name: tool.name,
+            description: tool.description,
+            parameters,
+          },
+        };
+      });
+    }
+
     try {
       const response = await fetch(this.apiUrl, {
         method: "POST",
@@ -158,13 +181,23 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
 
       const data = (await response.json()) as GptResponse;
 
-      // 응답에서 content 추출 (여러 형식 지원)
+      // 응답에서 content 및 tool_calls 추출
       let content = "";
+      let toolCalls: any[] = [];
 
       if (data.choices && data.choices.length > 0) {
         const firstChoice = data.choices[0];
         if (firstChoice && firstChoice.message?.content) {
           content = firstChoice.message.content;
+        }
+        // tool_calls 추출
+        if (firstChoice && firstChoice.message?.tool_calls) {
+          toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
+            name: tc.function.name,
+            args: JSON.parse(tc.function.arguments),
+            id: tc.id,
+            type: "tool_call",
+          }));
         }
       }
 
@@ -178,7 +211,10 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
         content = JSON.stringify(data);
       }
 
-      const message = new AIMessage({ content });
+      const message = new AIMessage({
+        content,
+        tool_calls: toolCalls,
+      });
 
       return {
         generations: [{ message, text: content }],
@@ -191,6 +227,28 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
 
   _llmType(): string {
     return "custom_gpt";
+  }
+
+  /**
+   * Tool을 모델에 바인딩
+   */
+  bindTools(
+    tools: StructuredToolInterface[],
+    kwargs?: Record<string, any>
+  ): ChatCustomGpt {
+    const params: ChatCustomGptParams = {
+      apiKey: this.apiKey,
+      apiUrl: this.apiUrl,
+      model: this.model,
+      temperature: this.temperature,
+      topK: this.topK,
+    };
+    if (this.customAuth) {
+      params.customAuth = this.customAuth;
+    }
+    const newInstance = new ChatCustomGpt(params);
+    newInstance.tools = tools;
+    return newInstance;
   }
 
   /**

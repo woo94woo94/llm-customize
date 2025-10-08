@@ -41,6 +41,14 @@ export interface GptResponse {
   choices?: Array<{
     message?: {
       content?: string;
+      tool_calls?: Array<{
+        id: string;
+        type: string;
+        function: {
+          name: string;
+          arguments: string;
+        };
+      }>;
     };
   }>;
   response?: string;

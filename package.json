@@ -7,7 +7,8 @@
     "build": "tsc",
     "native": "tsc && node dist/examples/native-example.js",
     "langchain": "tsc && node dist/examples/langchain-example.js",
-    "openai": "tsc && node dist/examples/openai-example.js"
+    "openai": "tsc && node dist/examples/openai-example.js",
+    "tools": "tsc && node dist/examples/langgraph-with-tools.js"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
     "@langchain/langgraph": "^0.4.9",
     "@langchain/openai": "^0.6.14",
     "axios": "^1.12.2",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "zod": "^3.25.76"
   }
 }
