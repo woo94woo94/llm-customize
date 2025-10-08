@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "native": "tsc && node dist/examples/native-example.js",
-    "langchain": "tsc && node dist/examples/langchain-example.js"
+    "langchain": "tsc && node dist/examples/langchain-example.js",
+    "openai": "tsc && node dist/examples/openai-example.js"
   },
   "keywords": [],
   "author": "",
