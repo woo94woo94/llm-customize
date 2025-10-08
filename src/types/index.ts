@@ -31,7 +31,6 @@ export interface GptRequest {
   messages: ChatMessage[];
   model?: string;
   temperature?: number;
-  topK?: number;
 }
 
 /**

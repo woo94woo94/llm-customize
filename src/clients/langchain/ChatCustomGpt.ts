@@ -16,7 +16,6 @@ interface ChatCustomGptOptions extends BaseChatModelCallOptions {}
 interface ChatCustomGptParams extends BaseChatModelParams, GptClientConfig {
   model?: string;
   temperature?: number;
-  topK?: number;
 }
 
 /**
@@ -45,7 +44,6 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   };
   model: string;
   temperature: number;
-  topK: number;
   tools?: StructuredToolInterface[];
 
   static lc_name(): string {
@@ -68,7 +66,6 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     }
     this.model = fields.model || "gpt-4o";
     this.temperature = fields.temperature ?? 0.7;
-    this.topK = fields.topK ?? 5;
   }
 
   /**
@@ -138,11 +135,6 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       model: this.model,
       temperature: this.temperature,
     };
-
-    // 커스텀 GPT API인 경우에만 topK 추가
-    if (this.customAuth) {
-      requestBody.topK = this.topK;
-    }
 
     // tools가 있으면 OpenAI API 형식으로 추가
     if (this.tools && this.tools.length > 0) {
@@ -241,7 +233,6 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       apiUrl: this.apiUrl,
       model: this.model,
       temperature: this.temperature,
-      topK: this.topK,
     };
     if (this.customAuth) {
       params.customAuth = this.customAuth;
@@ -272,11 +263,6 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       temperature: this.temperature,
       stream: true, // 스트리밍 모드 활성화
     };
-
-    // 커스텀 GPT API인 경우에만 topK 추가
-    if (this.customAuth) {
-      requestBody.topK = this.topK;
-    }
 
     try {
       const response = await fetch(this.apiUrl, {

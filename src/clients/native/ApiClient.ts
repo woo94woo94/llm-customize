@@ -88,11 +88,6 @@ export class ApiClient {
         temperature: request.temperature ?? 0.7,
       };
 
-      // 커스텀 GPT API인 경우에만 topK 추가
-      if (this.config.customAuth) {
-        requestBody.topK = request.topK ?? 5;
-      }
-
       const response = await this.axiosInstance.post<GptResponse>(
         "",
         requestBody,
