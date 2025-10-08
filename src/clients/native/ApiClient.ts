@@ -113,12 +113,18 @@ export class ApiClient {
         temperature: request.temperature ?? 0.7,
       };
 
+      const authHeader = this.createAuthHeader();
+      console.log("🔑 Request Headers:", {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      });
+
       const response = await this.axiosInstance.post<GptResponse>(
         "",
         requestBody,
         {
           headers: {
-            Authorization: this.createAuthHeader(),
+            Authorization: authHeader,
           },
         }
       );
@@ -174,12 +180,18 @@ export class ApiClient {
         tools,
       };
 
+      const authHeader = this.createAuthHeader();
+      console.log("🔑 Request Headers:", {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      });
+
       const response = await this.axiosInstance.post<GptResponse>(
         "",
         requestBody,
         {
           headers: {
-            Authorization: this.createAuthHeader(),
+            Authorization: authHeader,
           },
         }
       );
