@@ -3,7 +3,32 @@ import type {
   GptClientConfig,
   GptRequest,
   GptResponse,
+  ChatMessage,
 } from "../../types/index.js";
+
+// Tool 정의
+export interface Tool {
+  type: string;
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: string;
+      properties: Record<string, any>;
+      required: string[];
+    };
+  };
+}
+
+// Tool call 응답
+export interface ToolCall {
+  id: string;
+  type: string;
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
 
 /**
  * GPT API 직접 호출용 클라이언트
@@ -117,6 +142,49 @@ export class ApiClient {
       }
 
       return JSON.stringify(data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status || "No response";
+        const data = error.response?.data
+          ? JSON.stringify(error.response.data)
+          : "No data";
+        const message = error.message || "Unknown error";
+        throw new Error(`GPT API error: ${status} - ${data} (${message})`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Tool을 포함한 GPT API 호출 (Raw 응답 반환)
+   */
+  async chatWithTools(
+    messages: ChatMessage[],
+    tools: Tool[],
+    options?: {
+      model?: string;
+      temperature?: number;
+    }
+  ): Promise<GptResponse> {
+    try {
+      const requestBody: any = {
+        messages,
+        model: options?.model || "gpt-4o",
+        temperature: options?.temperature ?? 0.7,
+        tools,
+      };
+
+      const response = await this.axiosInstance.post<GptResponse>(
+        "",
+        requestBody,
+        {
+          headers: {
+            Authorization: this.createAuthHeader(),
+          },
+        }
+      );
+
+      return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status || "No response";

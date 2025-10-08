@@ -1,19 +1,6 @@
 import { loadConfig } from "../config/index.js";
-import type { ChatMessage, GptResponse } from "../types/index.js";
-
-// Tool 정의
-interface Tool {
-  type: string;
-  function: {
-    name: string;
-    description: string;
-    parameters: {
-      type: string;
-      properties: Record<string, any>;
-      required: string[];
-    };
-  };
-}
+import { ApiClient, type Tool } from "../clients/native/ApiClient.js";
+import type { ChatMessage } from "../types/index.js";
 
 // Tool 실행 함수
 const tools = {
@@ -75,6 +62,7 @@ const toolSchemas: Tool[] = [
 
 async function main() {
   const config = loadConfig();
+  const client = new ApiClient(config);
 
   console.log("=== Native API + Tools 테스트 ===\n");
 
@@ -89,38 +77,13 @@ async function main() {
     // 1. Tool을 포함한 첫 번째 요청
     console.log("📝 사용자 질문:", messages[0]?.content, "\n");
 
-    const response = await fetch(config.apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: config.customAuth
-          ? `Bearer ${Buffer.from(
-              JSON.stringify({
-                apiKey: config.apiKey,
-                systemCode: config.customAuth.systemCode,
-                companyCode: config.customAuth.companyCode,
-              })
-            ).toString("base64")}`
-          : `Bearer ${config.apiKey}`,
-      },
-      body: JSON.stringify({
-        messages,
-        model: "gpt-4o",
-        temperature: 0.7,
-        tools: toolSchemas,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = (await response.json()) as GptResponse;
+    const data = await client.chatWithTools(messages, toolSchemas);
 
     // 2. Tool calls 확인 및 실행
     if (data.choices?.[0]?.message?.tool_calls) {
       const assistantMessage = data.choices[0]?.message;
       if (!assistantMessage) return;
+
       messages.push({
         role: "assistant",
         content: assistantMessage.content || "",
@@ -148,29 +111,11 @@ async function main() {
       console.log("\n");
 
       // 3. Tool 결과를 포함한 두 번째 요청
-      const finalResponse = await fetch(config.apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: config.customAuth
-            ? `Bearer ${Buffer.from(
-                JSON.stringify({
-                  apiKey: config.apiKey,
-                  systemCode: config.customAuth.systemCode,
-                  companyCode: config.customAuth.companyCode,
-                })
-              ).toString("base64")}`
-            : `Bearer ${config.apiKey}`,
-        },
-        body: JSON.stringify({
-          messages,
-          model: "gpt-4o",
-          temperature: 0.7,
-        }),
+      const finalAnswer = await client.chat({
+        messages,
+        model: "gpt-4o",
+        temperature: 0.7,
       });
-
-      const finalData = (await finalResponse.json()) as GptResponse;
-      const finalAnswer = finalData.choices?.[0]?.message?.content || "응답 없음";
 
       console.log("💬 최종 답변:", finalAnswer);
     } else {
