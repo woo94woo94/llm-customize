@@ -78,6 +78,7 @@ async function main() {
     console.log("📝 사용자 질문:", messages[0]?.content, "\n");
 
     const data = await client.chatWithTools(messages, toolSchemas);
+    console.log("🔍 API 응답 (Raw):", JSON.stringify(data, null, 2), "\n");
 
     // 2. Tool calls 확인 및 실행
     if (data.choices?.[0]?.message?.tool_calls) {
