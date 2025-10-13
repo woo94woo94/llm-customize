@@ -196,12 +196,34 @@ export class ApiClient {
         }
       );
 
+      console.log("\n=== Response Analysis (chatWithTools) ===");
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+      console.log("Response data type:", typeof response.data);
+      console.log("Response data:", response.data);
+
       // customAuth를 사용하는 경우 응답이 문자열로 올 수 있음
       if (typeof response.data === "string") {
-        console.log("📝 Response is string, parsing...");
-        return JSON.parse(response.data);
+        console.log("\n📝 Response is string, attempting to parse...");
+        console.log("String length:", response.data.length);
+        console.log("First 200 chars:", response.data.substring(0, 200));
+        console.log("Last 200 chars:", response.data.substring(Math.max(0, response.data.length - 200)));
+
+        try {
+          const parsed = JSON.parse(response.data);
+          console.log("✅ JSON parsing successful");
+          console.log("Parsed data type:", typeof parsed);
+          console.log("Parsed data:", parsed);
+          return parsed;
+        } catch (parseError) {
+          console.error("\n❌ JSON Parse Error Details:");
+          console.error("Error:", parseError);
+          console.error("Raw string (full):", response.data);
+          throw parseError;
+        }
       }
 
+      console.log("✅ Response data is already object, returning as-is");
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
