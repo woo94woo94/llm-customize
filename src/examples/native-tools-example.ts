@@ -77,30 +77,53 @@ async function main() {
     // 1. Tool을 포함한 첫 번째 요청
     console.log("📝 사용자 질문:", messages[0]?.content, "\n");
 
+    console.log("=== 1단계: API 호출 (Tools 포함) ===");
     const data = await client.chatWithTools(messages, toolSchemas);
+
+    console.log("\n=== API 응답 분석 ===");
+    console.log("응답 타입:", typeof data);
+    console.log("응답 구조:", Object.keys(data || {}));
     console.log("🔍 API 응답 (Raw):", JSON.stringify(data, null, 2), "\n");
 
     // 2. Tool calls 확인 및 실행
+    console.log("=== 2단계: Tool Calls 확인 ===");
+    console.log("data.choices 존재:", !!data.choices);
+    console.log("data.choices 길이:", data.choices?.length || 0);
+    console.log("첫 번째 choice:", data.choices?.[0]);
+    console.log("message 객체:", data.choices?.[0]?.message);
+    console.log("tool_calls 존재:", !!data.choices?.[0]?.message?.tool_calls);
+    console.log("tool_calls 내용:", data.choices?.[0]?.message?.tool_calls, "\n");
+
     if (data.choices?.[0]?.message?.tool_calls) {
       const assistantMessage = data.choices[0]?.message;
-      if (!assistantMessage) return;
+      if (!assistantMessage) {
+        console.log("⚠️ assistantMessage가 없습니다");
+        return;
+      }
 
+      console.log("✅ Tool calls 발견!");
       messages.push({
         role: "assistant",
         content: assistantMessage.content || "",
       });
 
-      console.log("🔧 AI가 요청한 Tool calls:");
+      console.log("\n=== 3단계: Tool 실행 ===");
       const toolCalls = assistantMessage.tool_calls || [];
-      for (const toolCall of toolCalls) {
-        console.log(`- ${toolCall.function.name}:`, toolCall.function.arguments);
+      console.log(`실행할 Tool 개수: ${toolCalls.length}`);
+
+      for (let i = 0; i < toolCalls.length; i++) {
+        const toolCall = toolCalls[i];
+        console.log(`\n[Tool ${i + 1}/${toolCalls.length}]`);
+        console.log(`- 이름: ${toolCall.function.name}`);
+        console.log(`- 인자 (raw): ${toolCall.function.arguments}`);
 
         // Tool 실행
         const toolName = toolCall.function.name as keyof typeof tools;
         const args = JSON.parse(toolCall.function.arguments);
-        const result = await tools[toolName](args);
+        console.log(`- 인자 (parsed):`, args);
 
-        console.log(`  결과:`, result);
+        const result = await tools[toolName](args);
+        console.log(`- 실행 결과:`, result);
 
         // Tool 결과를 메시지에 추가
         messages.push({
@@ -109,23 +132,27 @@ async function main() {
         });
       }
 
-      console.log("\n");
+      console.log("\n=== 4단계: 최종 답변 요청 ===");
+      console.log("메시지 히스토리:", JSON.stringify(messages, null, 2));
 
-      // 3. Tool 결과를 포함한 두 번째 요청
       const finalAnswer = await client.chat({
         messages,
         model: "gpt-4o",
         temperature: 0.7,
       });
 
-      console.log("💬 최종 답변:", finalAnswer);
+      console.log("\n💬 최종 답변:", finalAnswer);
     } else {
+      console.log("❌ Tool calls가 없습니다");
       // Tool 호출 없이 바로 답변
       const answer = data.choices?.[0]?.message?.content || "응답 없음";
-      console.log("💬 답변:", answer);
+      console.log("💬 직접 답변:", answer);
     }
   } catch (error) {
-    console.error("에러 발생:", error);
+    console.error("\n=== 에러 발생 ===");
+    console.error("에러 타입:", error instanceof Error ? error.constructor.name : typeof error);
+    console.error("에러 메시지:", error instanceof Error ? error.message : error);
+    console.error("전체 에러:", error);
   }
 }
 
