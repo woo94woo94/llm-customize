@@ -196,6 +196,12 @@ export class ApiClient {
         }
       );
 
+      // customAuth를 사용하는 경우 응답이 문자열로 올 수 있음
+      if (typeof response.data === "string") {
+        console.log("📝 Response is string, parsing...");
+        return JSON.parse(response.data);
+      }
+
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

@@ -186,45 +186,50 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       console.log(responseText);
       console.log("=========================\n");
 
-      let data: GptResponse;
-      try {
-        data = JSON.parse(responseText) as GptResponse;
-      } catch (parseError) {
-        console.error("=== JSON Parse Error ===");
-        console.error("Error:", parseError);
-        console.error("Response was:", responseText.substring(0, 200));
-        console.error("========================\n");
-        throw new Error(`Failed to parse JSON response: ${parseError}`);
-      }
-
-      // 응답에서 content 및 tool_calls 추출
       let content = "";
       let toolCalls: any[] = [];
 
-      if (data.choices && data.choices.length > 0) {
-        const firstChoice = data.choices[0];
-        if (firstChoice && firstChoice.message?.content) {
-          content = firstChoice.message.content;
+      // customAuth 사용 시 응답이 plain text로 옴
+      if (this.customAuth) {
+        console.log("📝 customAuth detected, using raw response as-is");
+        content = responseText;
+      } else {
+        // 표준 OpenAI API는 항상 JSON
+        let data: GptResponse;
+        try {
+          data = JSON.parse(responseText) as GptResponse;
+        } catch (parseError) {
+          console.error("=== JSON Parse Error ===");
+          console.error("Error:", parseError);
+          console.error("Response was:", responseText.substring(0, 200));
+          console.error("========================\n");
+          throw new Error(`Failed to parse JSON response: ${parseError}`);
         }
-        // tool_calls 추출
-        if (firstChoice && firstChoice.message?.tool_calls) {
-          toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
-            name: tc.function.name,
-            args: JSON.parse(tc.function.arguments),
-            id: tc.id,
-            type: "tool_call",
-          }));
-        }
-      }
 
-      if (!content && data.response) {
-        content = data.response;
-      } else if (!content && data.answer) {
-        content = data.answer;
-      } else if (!content && data.result) {
-        content = data.result;
-      } else if (!content) {
-        content = JSON.stringify(data);
+        if (data.choices && data.choices.length > 0) {
+          const firstChoice = data.choices[0];
+          if (firstChoice && firstChoice.message?.content) {
+            content = firstChoice.message.content;
+          }
+          if (firstChoice && firstChoice.message?.tool_calls) {
+            toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
+              name: tc.function.name,
+              args: JSON.parse(tc.function.arguments),
+              id: tc.id,
+              type: "tool_call",
+            }));
+          }
+        }
+
+        if (!content && data.response) {
+          content = data.response;
+        } else if (!content && data.answer) {
+          content = data.answer;
+        } else if (!content && data.result) {
+          content = data.result;
+        } else if (!content) {
+          content = JSON.stringify(data);
+        }
       }
 
       const message = new AIMessage({
