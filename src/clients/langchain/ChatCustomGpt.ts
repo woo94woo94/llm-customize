@@ -157,6 +157,11 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     }
 
     try {
+      console.log("=== Request to GPT API ===");
+      console.log("URL:", this.apiUrl);
+      console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+      console.log("==========================\n");
+
       const response = await fetch(this.apiUrl, {
         method: "POST",
         headers: {
@@ -166,12 +171,31 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
         body: JSON.stringify(requestBody),
       });
 
+      console.log("=== Response Status ===");
+      console.log("Status:", response.status, response.statusText);
+      console.log("Headers:", Object.fromEntries(response.headers.entries()));
+      console.log("======================\n");
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`GPT API error (${response.status}): ${errorText}`);
       }
 
-      const data = (await response.json()) as GptResponse;
+      const responseText = await response.text();
+      console.log("=== Raw Response Body ===");
+      console.log(responseText);
+      console.log("=========================\n");
+
+      let data: GptResponse;
+      try {
+        data = JSON.parse(responseText) as GptResponse;
+      } catch (parseError) {
+        console.error("=== JSON Parse Error ===");
+        console.error("Error:", parseError);
+        console.error("Response was:", responseText.substring(0, 200));
+        console.error("========================\n");
+        throw new Error(`Failed to parse JSON response: ${parseError}`);
+      }
 
       // 응답에서 content 및 tool_calls 추출
       let content = "";
