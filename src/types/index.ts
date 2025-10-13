@@ -34,23 +34,7 @@ export interface GptRequest {
 }
 
 /**
- * GPT API 응답 인터페이스
+ * GPT API 응답 타입
+ * any로 정의하여 다양한 응답 형식을 유연하게 처리
  */
-export interface GptResponse {
-  choices?: Array<{
-    message?: {
-      content?: string;
-      tool_calls?: Array<{
-        id: string;
-        type: string;
-        function: {
-          name: string;
-          arguments: string;
-        };
-      }>;
-    };
-  }>;
-  response?: string;
-  answer?: string;
-  result?: string;
-}
+export type GptResponse = any;
