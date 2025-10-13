@@ -113,6 +113,8 @@ async function main() {
 
       for (let i = 0; i < toolCalls.length; i++) {
         const toolCall = toolCalls[i];
+        if (!toolCall) continue;
+
         console.log(`\n[Tool ${i + 1}/${toolCalls.length}]`);
         console.log(`- 이름: ${toolCall.function.name}`);
         console.log(`- 인자 (raw): ${toolCall.function.arguments}`);
