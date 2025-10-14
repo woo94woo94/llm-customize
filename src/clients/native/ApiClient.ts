@@ -114,10 +114,14 @@ export class ApiClient {
       };
 
       const authHeader = this.createAuthHeader();
+
+      console.log("\n=== Request (chat) ===");
       console.log("🔑 Request Headers:", {
         "Content-Type": "application/json",
         Authorization: authHeader,
       });
+      console.log("📤 Request Body:", JSON.stringify(requestBody, null, 2));
+      console.log("======================\n");
 
       const response = await this.axiosInstance.post<GptResponse>(
         "",
