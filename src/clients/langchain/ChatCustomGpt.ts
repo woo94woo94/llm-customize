@@ -145,7 +145,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
             arguments: JSON.stringify(tc.args),
           },
         }));
-        console.log(`  tool_calls 개수: ${result.tool_calls.length}`);
+        console.log(`  tool_calls 개수: ${result.tool_calls?.length || 0}`);
 
         // tool_calls가 있고 content가 빈 문자열이면 null로 설정
         if (!result.content || result.content === "") {
