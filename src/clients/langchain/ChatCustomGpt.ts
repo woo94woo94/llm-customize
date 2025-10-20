@@ -97,7 +97,11 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   private formatMessages(
     messages: BaseMessage[]
   ): Array<{ role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] }> {
-    return messages.map((msg) => {
+    console.log("\n=== formatMessages 시작 ===");
+    console.log(`customAuth 사용: ${!!this.customAuth}`);
+    console.log(`총 메시지 개수: ${messages.length}`);
+
+    const formatted = messages.map((msg, index) => {
       const msgType = msg._getType();
       let role = "user";
 
@@ -115,19 +119,25 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
           ? msg.content
           : JSON.stringify(msg.content);
 
-      const formatted: { role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] } = {
+      const result: { role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] } = {
         role,
         content,
       };
 
+      console.log(`\n[메시지 ${index + 1}]`);
+      console.log(`  원본 타입: ${msgType}`);
+      console.log(`  변환된 role: ${role}`);
+      console.log(`  content 길이: ${content?.length || 0}`);
+
       // ToolMessage인 경우 tool_call_id 추가 (customAuth가 아닐 때만)
       if (msgType === "tool" && "tool_call_id" in msg && !this.customAuth) {
-        formatted.tool_call_id = (msg as any).tool_call_id;
+        result.tool_call_id = (msg as any).tool_call_id;
+        console.log(`  tool_call_id: ${result.tool_call_id}`);
       }
 
       // AI 메시지에 tool_calls가 있는 경우 추가
       if (msgType === "ai" && "tool_calls" in msg && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
-        formatted.tool_calls = (msg as any).tool_calls.map((tc: any) => ({
+        result.tool_calls = (msg as any).tool_calls.map((tc: any) => ({
           id: tc.id,
           type: "function",
           function: {
@@ -135,14 +145,20 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
             arguments: JSON.stringify(tc.args),
           },
         }));
+        console.log(`  tool_calls 개수: ${result.tool_calls.length}`);
+
         // tool_calls가 있고 content가 빈 문자열이면 null로 설정
-        if (!formatted.content || formatted.content === "") {
-          formatted.content = null;
+        if (!result.content || result.content === "") {
+          result.content = null;
+          console.log(`  content를 null로 설정`);
         }
       }
 
-      return formatted;
+      return result;
     });
+
+    console.log("\n=== formatMessages 완료 ===\n");
+    return formatted;
   }
 
   async _generate(
