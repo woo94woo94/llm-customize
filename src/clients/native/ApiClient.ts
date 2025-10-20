@@ -75,6 +75,17 @@ export class ApiClient {
         "Content-Type": "application/json",
       },
     });
+
+    // POST 요청에 need_origin: true를 자동으로 추가
+    this.axiosInstance.interceptors.request.use((config) => {
+      if (config.method === 'post' && config.data) {
+        config.data = {
+          ...config.data,
+          need_origin: true,
+        };
+      }
+      return config;
+    });
   }
 
   /**
@@ -246,79 +257,4 @@ export class ApiClient {
     }
   }
 
-  /**
-   * GPT API 스트리밍 호출
-   */
-  async *chatStream(request: GptRequest): AsyncGenerator<string> {
-    try {
-      const requestBody: any = {
-        messages: request.messages,
-        model: request.model || "gpt-4o",
-        temperature: request.temperature ?? 0.7,
-        stream: true,
-      };
-
-      const authHeader = this.createAuthHeader();
-      console.log("🔑 Request Headers (Streaming):", {
-        "Content-Type": "application/json",
-        Authorization: authHeader,
-      });
-
-      const response = await fetch(this.config.apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: authHeader,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`GPT API error (${response.status}): ${errorText}`);
-      }
-
-      if (!response.body) {
-        throw new Error("Response body is null");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed === "data: [DONE]") continue;
-
-          if (trimmed.startsWith("data: ")) {
-            try {
-              const jsonStr = trimmed.slice(6);
-              const data = JSON.parse(jsonStr);
-
-              // OpenAI 스트리밍 형식
-              if (data.choices?.[0]?.delta?.content) {
-                yield data.choices[0].delta.content;
-              }
-            } catch (e) {
-              // JSON 파싱 실패 시 무시
-              continue;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to stream GPT API: ${error.message}`);
-      }
-      throw error;
-    }
-  }
 }
