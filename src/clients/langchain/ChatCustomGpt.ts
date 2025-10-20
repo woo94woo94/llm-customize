@@ -133,8 +133,12 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       messages: formattedMessages,
       model: this.model,
       temperature: this.temperature,
-      need_origin: true,
     };
+
+    // customAuth 사용 시에만 need_origin 추가
+    if (this.customAuth) {
+      requestBody.need_origin = true;
+    }
 
     // tools가 있으면 OpenAI API 형식으로 추가
     if (this.tools && this.tools.length > 0) {

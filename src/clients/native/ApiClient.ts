@@ -76,9 +76,9 @@ export class ApiClient {
       },
     });
 
-    // POST 요청에 need_origin: true를 자동으로 추가
+    // customAuth 사용 시 POST 요청에 need_origin: true를 자동으로 추가
     this.axiosInstance.interceptors.request.use((config) => {
-      if (config.method === 'post' && config.data) {
+      if (this.config.customAuth && config.method === 'post' && config.data) {
         config.data = {
           ...config.data,
           need_origin: true,
