@@ -108,34 +108,52 @@ async function main() {
   console.log("\n");
 
   try {
-    const stream = await app.stream(
-      {
-        messages: [
-          new HumanMessage(
-            "get_weather 툴을 사용해서 서울 날씨를 알려주고, calculator 툴을 사용해서 25*4를 계산해줘"
-          ),
-        ],
-      },
-      { streamMode: "values" }
-    );
+    console.log("💬 사용자 질문: 서울 날씨를 알려주고, 25*4를 계산해줘\n");
 
-    for await (const chunk of stream) {
-      const lastMessage = chunk.messages[chunk.messages.length - 1];
-      if (!lastMessage) continue;
+    const result = await app.invoke({
+      messages: [
+        new HumanMessage(
+          "get_weather 툴을 사용해서 서울 날씨를 알려주고, calculator 툴을 사용해서 25*4를 계산해줘"
+        ),
+      ],
+    });
 
-      const type = lastMessage._getType();
-      const content = lastMessage.content;
-      const toolCalls = (lastMessage as any).tool_calls;
+    console.log("\n=== 실행 결과 ===");
+    console.log(`총 메시지 개수: ${result.messages.length}\n`);
 
-      console.log({
-        type,
-        content: typeof content === "string" ? content : JSON.stringify(content),
-        toolCalls: toolCalls || "없음",
-      });
-      console.log("-----\n");
+    // 모든 메시지 출력
+    result.messages.forEach((msg: any, index: number) => {
+      const type = msg._getType();
+      console.log(`[${index + 1}] ${type.toUpperCase()}`);
+
+      if (type === "human") {
+        console.log(`내용: ${msg.content}\n`);
+      } else if (type === "ai") {
+        console.log(`내용: ${msg.content || "(tool 호출)"}`);
+        if (msg.tool_calls && msg.tool_calls.length > 0) {
+          console.log(`Tool 호출:`);
+          msg.tool_calls.forEach((tc: any) => {
+            console.log(`  - ${tc.name}(${JSON.stringify(tc.args)})`);
+          });
+        }
+        console.log();
+      } else if (type === "tool") {
+        console.log(`Tool: ${msg.name}`);
+        console.log(`결과: ${msg.content}\n`);
+      }
+    });
+
+    // 최종 답변 출력
+    const lastMessage = result.messages[result.messages.length - 1];
+    if (lastMessage && lastMessage._getType() === "ai") {
+      console.log("=".repeat(50));
+      console.log("✅ 최종 답변:");
+      console.log(lastMessage.content);
+      console.log("=".repeat(50));
     }
   } catch (error) {
-    console.error("에러 발생:", error);
+    console.error("\n=== 에러 발생 ===");
+    console.error("에러:", error);
   }
 }
 
