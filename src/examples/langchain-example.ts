@@ -64,57 +64,6 @@ async function main() {
     console.error("에러 발생:", error);
   }
 
-  console.log("\n" + "=".repeat(50) + "\n");
-
-  console.log("📝 예제 3: 토큰 단위 스트리밍 (model.stream)\n");
-
-  try {
-    // 모델 직접 스트리밍
-    process.stdout.write("답변: ");
-
-    const stream = await model.stream([
-      new HumanMessage("LangGraph에 대해 간단히 설명해주세요."),
-    ]);
-
-    for await (const chunk of stream) {
-      if (typeof chunk.content === "string") {
-        process.stdout.write(chunk.content);
-      }
-    }
-
-    console.log("\n");
-  } catch (error) {
-    console.error("에러 발생:", error);
-  }
-
-  console.log("\n" + "=".repeat(50) + "\n");
-
-  console.log("📝 예제 4: LangGraph에서 스트리밍\n");
-
-  try {
-    // LangGraph streamEvents를 통한 스트리밍
-    process.stdout.write("답변: ");
-
-    const eventStream = app.streamEvents(
-      {
-        messages: [new HumanMessage("TypeScript의 장점을 3가지만 말해줘.")],
-      },
-      { version: "v2" }
-    );
-
-    for await (const event of eventStream) {
-      if (event.event === "on_chat_model_stream") {
-        const chunk = event.data?.chunk;
-        if (chunk?.content && typeof chunk.content === "string") {
-          process.stdout.write(chunk.content);
-        }
-      }
-    }
-
-    console.log("\n");
-  } catch (error) {
-    console.error("에러 발생:", error);
-  }
 }
 
 // 실행

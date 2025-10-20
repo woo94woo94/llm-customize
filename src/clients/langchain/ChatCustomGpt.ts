@@ -1,6 +1,5 @@
-import { AIMessage, AIMessageChunk, BaseMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessage } from "@langchain/core/messages";
 import type { ChatResult } from "@langchain/core/outputs";
-import { ChatGenerationChunk } from "@langchain/core/outputs";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
@@ -134,6 +133,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       messages: formattedMessages,
       model: this.model,
       temperature: this.temperature,
+      need_origin: true,
     };
 
     // tools가 있으면 OpenAI API 형식으로 추가
@@ -271,90 +271,4 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     return newInstance;
   }
 
-  /**
-   * 스트리밍 생성 (토큰 단위로 응답 반환)
-   */
-  async *_streamResponseChunks(
-    messages: BaseMessage[],
-    _options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
-    if (!messages.length) {
-      throw new Error("No messages provided.");
-    }
-
-    const formattedMessages = this.formatMessages(messages);
-
-    // 요청 바디 구성
-    const requestBody: any = {
-      messages: formattedMessages,
-      model: this.model,
-      temperature: this.temperature,
-      stream: true, // 스트리밍 모드 활성화
-    };
-
-    try {
-      const response = await fetch(this.apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: this.createAuthHeader(),
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`GPT API error (${response.status}): ${errorText}`);
-      }
-
-      if (!response.body) {
-        throw new Error("Response body is null");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed === "data: [DONE]") continue;
-
-          if (trimmed.startsWith("data: ")) {
-            try {
-              const jsonStr = trimmed.slice(6);
-              const data = JSON.parse(jsonStr);
-
-              // OpenAI 스트리밍 형식
-              if (data.choices?.[0]?.delta?.content) {
-                const content = data.choices[0].delta.content;
-
-                // ChatGenerationChunk yield
-                yield new ChatGenerationChunk({
-                  message: new AIMessageChunk({ content }),
-                  text: content,
-                });
-
-                // 콜백 트리거
-                await runManager?.handleLLMNewToken(content);
-              }
-            } catch (e) {
-              // JSON 파싱 실패 시 무시
-              continue;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      throw new Error(`Failed to stream GPT API: ${error}`);
-    }
-  }
 }
