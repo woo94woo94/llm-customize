@@ -69,21 +69,36 @@ async function main() {
   const shouldContinue = (state: typeof MessagesAnnotation.State) => {
     const { messages } = state;
     const lastMessage = messages[messages.length - 1];
+
+    console.log("\n🔍 shouldContinue 체크:");
+    console.log(`- 마지막 메시지 타입: ${lastMessage?._getType()}`);
+    console.log(`- tool_calls 존재: ${"tool_calls" in lastMessage}`);
+    console.log(`- tool_calls 배열: ${Array.isArray((lastMessage as any).tool_calls)}`);
+    console.log(`- tool_calls 개수: ${(lastMessage as any).tool_calls?.length || 0}`);
+
     if (
       lastMessage &&
       "tool_calls" in lastMessage &&
       Array.isArray(lastMessage.tool_calls) &&
       lastMessage.tool_calls?.length
     ) {
+      console.log("➡️ tools 노드로 이동\n");
       return "tools";
     }
+    console.log("➡️ 종료\n");
     return "__end__";
   };
 
   // 모델 호출 노드
   const callModel = async (state: typeof MessagesAnnotation.State) => {
     const { messages } = state;
+    console.log("\n🤖 Agent 노드 호출:");
+    console.log(`- 현재 메시지 개수: ${messages.length}`);
     const response = await modelWithTools.invoke(messages);
+    console.log(`- AI 응답: ${response.content || "(tool 호출)"}`);
+    if ((response as any).tool_calls?.length > 0) {
+      console.log(`- Tool 호출 개수: ${(response as any).tool_calls.length}`);
+    }
     return { messages: [response] };
   };
 
@@ -110,13 +125,18 @@ async function main() {
   try {
     console.log("💬 사용자 질문: 서울 날씨를 알려주고, 25*4를 계산해줘\n");
 
-    const result = await app.invoke({
-      messages: [
-        new HumanMessage(
-          "get_weather 툴을 사용해서 서울 날씨를 알려주고, calculator 툴을 사용해서 25*4를 계산해줘"
-        ),
-      ],
-    });
+    const result = await app.invoke(
+      {
+        messages: [
+          new HumanMessage(
+            "서울 날씨를 알려주고, 25*4를 계산해줘"
+          ),
+        ],
+      },
+      {
+        recursionLimit: 10,
+      }
+    );
 
     console.log("\n=== 실행 결과 ===");
     console.log(`총 메시지 개수: ${result.messages.length}\n`);
