@@ -96,7 +96,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
    */
   private formatMessages(
     messages: BaseMessage[]
-  ): Array<{ role: string; content: string; tool_call_id?: string; tool_calls?: any[] }> {
+  ): Array<{ role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] }> {
     return messages.map((msg) => {
       const msgType = msg._getType();
       let role = "user";
@@ -109,12 +109,14 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
         role = "tool";
       }
 
-      const formatted: { role: string; content: string; tool_call_id?: string; tool_calls?: any[] } = {
+      let content: string | null =
+        typeof msg.content === "string"
+          ? msg.content
+          : JSON.stringify(msg.content);
+
+      const formatted: { role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] } = {
         role,
-        content:
-          typeof msg.content === "string"
-            ? msg.content
-            : JSON.stringify(msg.content),
+        content,
       };
 
       // ToolMessage인 경우 tool_call_id 추가
@@ -132,6 +134,10 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
             arguments: JSON.stringify(tc.args),
           },
         }));
+        // tool_calls가 있고 content가 빈 문자열이면 null로 설정
+        if (!formatted.content || formatted.content === "") {
+          formatted.content = null;
+        }
       }
 
       return formatted;
