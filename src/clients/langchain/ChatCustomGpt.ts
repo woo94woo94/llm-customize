@@ -69,26 +69,18 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
 
   /**
    * Authorization 헤더 생성
-   * - customAuth가 있으면: JSON을 Base64로 인코딩 (커스텀 GPT API)
-   * - customAuth가 없으면: 평문 API 키 사용 (표준 OpenAI API)
    */
   private createAuthHeader(): string {
     if (this.customAuth) {
-      // 커스텀 GPT API 방식: base64 인코딩
       const authJson = {
         apiKey: this.apiKey,
         systemCode: this.customAuth.systemCode,
         companyCode: this.customAuth.companyCode,
       };
-
-      const jsonString = JSON.stringify(authJson);
-      const base64Encoded = Buffer.from(jsonString).toString("base64");
-
+      const base64Encoded = Buffer.from(JSON.stringify(authJson)).toString("base64");
       return `Bearer ${base64Encoded}`;
-    } else {
-      // 표준 OpenAI API 방식: 평문 API 키
-      return `Bearer ${this.apiKey}`;
     }
+    return `Bearer ${this.apiKey}`;
   }
 
   /**
@@ -97,11 +89,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   private formatMessages(
     messages: BaseMessage[]
   ): Array<{ role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] }> {
-    console.log("\n=== formatMessages 시작 ===");
-    console.log(`customAuth 사용: ${!!this.customAuth}`);
-    console.log(`총 메시지 개수: ${messages.length}`);
-
-    const formatted = messages.map((msg, index) => {
+    return messages.map((msg) => {
       const msgType = msg._getType();
       let role = "user";
 
@@ -110,7 +98,6 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       } else if (msgType === "ai") {
         role = "assistant";
       } else if (msgType === "tool") {
-        // customAuth 사용 시 tool을 user로 변환 (서버가 role: "tool" 지원하지 않을 수 있음)
         role = this.customAuth ? "user" : "tool";
       }
 
@@ -119,11 +106,9 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
           ? msg.content
           : JSON.stringify(msg.content);
 
-      // customAuth 사용 시 ToolMessage를 user로 변환하면서 tool 이름 포함
+      // customAuth: ToolMessage에 tool 이름 포함
       if (msgType === "tool" && this.customAuth && "name" in msg) {
-        const toolName = (msg as any).name;
-        content = `${toolName} 결과: ${content}`;
-        console.log(`  customAuth: tool 이름 포함 - ${toolName}`);
+        content = `${(msg as any).name} 결과: ${content}`;
       }
 
       const result: { role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] } = {
@@ -131,21 +116,15 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
         content,
       };
 
-      console.log(`\n[메시지 ${index + 1}]`);
-      console.log(`  원본 타입: ${msgType}`);
-      console.log(`  변환된 role: ${role}`);
-      console.log(`  content 길이: ${content?.length || 0}`);
-
-      // ToolMessage인 경우 tool_call_id 추가 (customAuth가 아닐 때만)
+      // 표준 API: tool_call_id 추가
       if (msgType === "tool" && "tool_call_id" in msg && !this.customAuth) {
         result.tool_call_id = (msg as any).tool_call_id;
-        console.log(`  tool_call_id: ${result.tool_call_id}`);
       }
 
-      // AI 메시지에 tool_calls가 있는 경우 추가 (customAuth가 아닐 때만)
+      // AI 메시지의 tool_calls 처리
       if (msgType === "ai" && "tool_calls" in msg && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
         if (!this.customAuth) {
-          // 표준 OpenAI API는 tool_calls 포함
+          // 표준 API: tool_calls 포함
           result.tool_calls = (msg as any).tool_calls.map((tc: any) => ({
             id: tc.id,
             type: "function",
@@ -154,30 +133,59 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
               arguments: JSON.stringify(tc.args),
             },
           }));
-          console.log(`  tool_calls 개수: ${result.tool_calls?.length || 0}`);
-
-          // 표준 OpenAI는 tool_calls가 있을 때 content를 null로 설정
+          // content를 null로 설정
           if (!result.content || result.content === "") {
             result.content = null;
-            console.log(`  content를 null로 설정`);
           }
         } else {
-          // customAuth는 tool_calls 제거 (서버가 지원하지 않음)
-          console.log(`  customAuth: tool_calls 제거 (서버 미지원)`);
-
-          // customAuth는 content를 빈 문자열로 유지 (null은 404 발생)
+          // customAuth: tool_calls 제거, content 빈 문자열 유지
           if (!result.content || result.content === "") {
             result.content = "";
-            console.log(`  customAuth: content를 빈 문자열로 유지`);
           }
         }
       }
 
       return result;
     });
+  }
 
-    console.log("\n=== formatMessages 완료 ===\n");
-    return formatted;
+  /**
+   * 응답에서 content와 tool_calls 추출
+   */
+  private parseResponse(responseText: string): { content: string; toolCalls: any[] } {
+    let content = "";
+    let toolCalls: any[] = [];
+
+    try {
+      const data = JSON.parse(responseText) as GptResponse;
+
+      if (data.choices && data.choices.length > 0) {
+        const firstChoice = data.choices[0];
+
+        if (firstChoice?.message?.content) {
+          content = firstChoice.message.content;
+        }
+
+        if (firstChoice?.message?.tool_calls) {
+          toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
+            name: tc.function.name,
+            args: JSON.parse(tc.function.arguments),
+            id: tc.id,
+            type: "tool_call",
+          }));
+        }
+      }
+
+      // content가 없는 경우 대체 필드 확인
+      if (!content && toolCalls.length === 0) {
+        content = data.response || data.answer || data.result || JSON.stringify(data);
+      }
+    } catch (parseError) {
+      // JSON 파싱 실패 시 raw text 사용
+      content = responseText;
+    }
+
+    return { content, toolCalls };
   }
 
   async _generate(
@@ -191,41 +199,18 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
 
     const formattedMessages = this.formatMessages(messages);
 
-    // 요청 바디 구성
     const requestBody: any = {
       messages: formattedMessages,
       model: this.model,
       temperature: this.temperature,
     };
 
-    // customAuth 사용 시에만 need_origin 추가
     if (this.customAuth) {
       requestBody.need_origin = true;
     }
 
-    console.log("\n=== 최종 전송 메시지 ===");
-    console.log(`customAuth: ${!!this.customAuth}`);
-    console.log(`tools 포함: ${!!(this.tools && this.tools.length > 0)}`);
-    console.log("전송될 messages:");
-    formattedMessages.forEach((msg, index) => {
-      console.log(`\n[${index + 1}] ${msg.role}`);
-      console.log(`  content: ${msg.content ? (msg.content.length > 50 ? msg.content.substring(0, 50) + "..." : msg.content) : "null"}`);
-      if (msg.tool_call_id) {
-        console.log(`  tool_call_id: ${msg.tool_call_id}`);
-      }
-      if (msg.tool_calls && msg.tool_calls.length > 0) {
-        console.log(`  tool_calls: ${msg.tool_calls.length}개`);
-        msg.tool_calls.forEach((tc: any, i: number) => {
-          console.log(`    [${i + 1}] ${tc.function.name}`);
-        });
-      }
-    });
-    console.log("\n========================\n");
-
-    // tools가 있으면 OpenAI API 형식으로 추가
     if (this.tools && this.tools.length > 0) {
       requestBody.tools = this.tools.map((tool) => {
-        // Zod schema인 경우 JSON Schema로 변환
         let parameters = tool.schema;
         if (parameters && typeof parameters === "object" && "_def" in parameters) {
           parameters = zodToJsonSchema(parameters as any);
@@ -243,11 +228,6 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     }
 
     try {
-      console.log("=== Request to GPT API ===");
-      console.log("URL:", this.apiUrl);
-      console.log("Request Body:", JSON.stringify(requestBody, null, 2));
-      console.log("==========================\n");
-
       const response = await fetch(this.apiUrl, {
         method: "POST",
         headers: {
@@ -257,100 +237,13 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
         body: JSON.stringify(requestBody),
       });
 
-      console.log("=== Response Status ===");
-      console.log("Status:", response.status, response.statusText);
-      console.log("Headers:", Object.fromEntries(response.headers.entries()));
-      console.log("======================\n");
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`GPT API error (${response.status}): ${errorText}`);
       }
 
       const responseText = await response.text();
-      console.log("=== Raw Response Body ===");
-      console.log(responseText);
-      console.log("=========================\n");
-
-      let content = "";
-      let toolCalls: any[] = [];
-
-      // customAuth 사용 시에도 JSON 파싱 시도
-      if (this.customAuth) {
-        console.log("📝 customAuth detected, attempting JSON parse");
-        try {
-          const data = JSON.parse(responseText) as GptResponse;
-          console.log("✅ JSON 파싱 성공");
-
-          // tool_calls 추출
-          if (data.choices && data.choices.length > 0) {
-            const firstChoice = data.choices[0];
-            if (firstChoice && firstChoice.message?.content) {
-              content = firstChoice.message.content;
-            }
-            if (firstChoice && firstChoice.message?.tool_calls) {
-              toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
-                name: tc.function.name,
-                args: JSON.parse(tc.function.arguments),
-                id: tc.id,
-                type: "tool_call",
-              }));
-            }
-          }
-
-          // content가 없는 경우 다른 필드에서 추출
-          if (!content && data.response) {
-            content = data.response;
-          } else if (!content && data.answer) {
-            content = data.answer;
-          } else if (!content && data.result) {
-            content = data.result;
-          }
-        } catch (parseError) {
-          console.log("⚠️ JSON 파싱 실패, raw text 사용");
-          content = responseText;
-        }
-      } else {
-        // 표준 OpenAI API는 항상 JSON
-        let data: GptResponse;
-        try {
-          data = JSON.parse(responseText) as GptResponse;
-        } catch (parseError) {
-          console.error("=== JSON Parse Error ===");
-          console.error("Error:", parseError);
-          console.error("Response was:", responseText.substring(0, 200));
-          console.error("========================\n");
-          throw new Error(`Failed to parse JSON response: ${parseError}`);
-        }
-
-        if (data.choices && data.choices.length > 0) {
-          const firstChoice = data.choices[0];
-          if (firstChoice && firstChoice.message?.content) {
-            content = firstChoice.message.content;
-          }
-          if (firstChoice && firstChoice.message?.tool_calls) {
-            toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
-              name: tc.function.name,
-              args: JSON.parse(tc.function.arguments),
-              id: tc.id,
-              type: "tool_call",
-            }));
-          }
-        }
-
-        // content가 없는 경우 다른 필드에서 추출 (tool_calls가 없을 때만)
-        if (!content && toolCalls.length === 0) {
-          if (data.response) {
-            content = data.response;
-          } else if (data.answer) {
-            content = data.answer;
-          } else if (data.result) {
-            content = data.result;
-          } else {
-            content = JSON.stringify(data);
-          }
-        }
-      }
+      const { content, toolCalls } = this.parseResponse(responseText);
 
       const message = new AIMessage({
         content,
@@ -373,10 +266,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   /**
    * Tool을 모델에 바인딩
    */
-  bindTools(
-    tools: StructuredToolInterface[],
-    kwargs?: Record<string, any>
-  ): ChatCustomGpt {
+  bindTools(tools: StructuredToolInterface[]): ChatCustomGpt {
     const params: ChatCustomGptParams = {
       apiKey: this.apiKey,
       apiUrl: this.apiUrl,
