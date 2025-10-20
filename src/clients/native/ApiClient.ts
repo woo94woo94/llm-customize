@@ -177,6 +177,86 @@ export class ApiClient {
   }
 
   /**
+   * Structured Output을 사용한 GPT API 호출
+   */
+  async chatWithStructuredOutput<T = any>(
+    messages: ChatMessage[],
+    schema: {
+      name: string;
+      description?: string;
+      schema: Record<string, any>;
+    },
+    options?: {
+      model?: string;
+      temperature?: number;
+    }
+  ): Promise<T> {
+    try {
+      const requestBody: any = {
+        messages,
+        model: options?.model || "gpt-4o",
+        temperature: options?.temperature ?? 0.7,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: schema.name,
+            description: schema.description,
+            strict: true,
+            schema: schema.schema,
+          },
+        },
+      };
+
+      const authHeader = this.createAuthHeader();
+
+      console.log("\n=== Request (chatWithStructuredOutput) ===");
+      console.log("🔑 Request Headers:", {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      });
+      console.log("📤 Request Body:", JSON.stringify(requestBody, null, 2));
+      console.log("==========================================\n");
+
+      const response = await this.axiosInstance.post<GptResponse>(
+        "",
+        requestBody,
+        {
+          headers: {
+            Authorization: authHeader,
+          },
+        }
+      );
+
+      console.log("\n=== Response (chatWithStructuredOutput) ===");
+      console.log("Response status:", response.status);
+      console.log("Response data:", JSON.stringify(response.data, null, 2));
+      console.log("===========================================\n");
+
+      const data = response.data;
+
+      if (data.choices && data.choices.length > 0) {
+        const firstChoice = data.choices[0];
+        if (firstChoice && firstChoice.message?.content) {
+          // content가 JSON 문자열이므로 파싱
+          return JSON.parse(firstChoice.message.content) as T;
+        }
+      }
+
+      throw new Error("No structured output in response");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status || "No response";
+        const data = error.response?.data
+          ? JSON.stringify(error.response.data)
+          : "No data";
+        const message = error.message || "Unknown error";
+        throw new Error(`GPT API error: ${status} - ${data} (${message})`);
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Tool을 포함한 GPT API 호출 (Raw 응답 반환)
    */
   async chatWithTools(
