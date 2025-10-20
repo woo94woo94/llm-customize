@@ -135,22 +135,31 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
         console.log(`  tool_call_id: ${result.tool_call_id}`);
       }
 
-      // AI 메시지에 tool_calls가 있는 경우 추가
+      // AI 메시지에 tool_calls가 있는 경우 추가 (customAuth가 아닐 때만)
       if (msgType === "ai" && "tool_calls" in msg && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
-        result.tool_calls = (msg as any).tool_calls.map((tc: any) => ({
-          id: tc.id,
-          type: "function",
-          function: {
-            name: tc.name,
-            arguments: JSON.stringify(tc.args),
-          },
-        }));
-        console.log(`  tool_calls 개수: ${result.tool_calls?.length || 0}`);
+        if (!this.customAuth) {
+          // 표준 OpenAI API는 tool_calls 포함
+          result.tool_calls = (msg as any).tool_calls.map((tc: any) => ({
+            id: tc.id,
+            type: "function",
+            function: {
+              name: tc.name,
+              arguments: JSON.stringify(tc.args),
+            },
+          }));
+          console.log(`  tool_calls 개수: ${result.tool_calls?.length || 0}`);
 
-        // tool_calls가 있고 content가 빈 문자열이면 null로 설정
-        if (!result.content || result.content === "") {
-          result.content = null;
-          console.log(`  content를 null로 설정`);
+          // tool_calls가 있고 content가 빈 문자열이면 null로 설정
+          if (!result.content || result.content === "") {
+            result.content = null;
+            console.log(`  content를 null로 설정`);
+          }
+        } else {
+          // customAuth는 tool_calls를 보내지 않음, content를 빈 문자열로 설정
+          if (!result.content || result.content === "") {
+            result.content = "";
+            console.log(`  customAuth: tool_calls 제거, content를 빈 문자열로 설정`);
+          }
         }
       }
 
