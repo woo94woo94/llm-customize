@@ -193,10 +193,41 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       let content = "";
       let toolCalls: any[] = [];
 
-      // customAuth 사용 시 응답이 plain text로 옴
+      // customAuth 사용 시에도 JSON 파싱 시도
       if (this.customAuth) {
-        console.log("📝 customAuth detected, using raw response as-is");
-        content = responseText;
+        console.log("📝 customAuth detected, attempting JSON parse");
+        try {
+          const data = JSON.parse(responseText) as GptResponse;
+          console.log("✅ JSON 파싱 성공");
+
+          // tool_calls 추출
+          if (data.choices && data.choices.length > 0) {
+            const firstChoice = data.choices[0];
+            if (firstChoice && firstChoice.message?.content) {
+              content = firstChoice.message.content;
+            }
+            if (firstChoice && firstChoice.message?.tool_calls) {
+              toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
+                name: tc.function.name,
+                args: JSON.parse(tc.function.arguments),
+                id: tc.id,
+                type: "tool_call",
+              }));
+            }
+          }
+
+          // content가 없는 경우 다른 필드에서 추출
+          if (!content && data.response) {
+            content = data.response;
+          } else if (!content && data.answer) {
+            content = data.answer;
+          } else if (!content && data.result) {
+            content = data.result;
+          }
+        } catch (parseError) {
+          console.log("⚠️ JSON 파싱 실패, raw text 사용");
+          content = responseText;
+        }
       } else {
         // 표준 OpenAI API는 항상 JSON
         let data: GptResponse;
