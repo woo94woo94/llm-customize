@@ -94,7 +94,15 @@ async function main() {
     const { messages } = state;
     console.log("\n🤖 Agent 노드 호출:");
     console.log(`- 현재 메시지 개수: ${messages.length}`);
-    const response = await modelWithTools.invoke(messages);
+
+    // tool 메시지가 있는지 확인
+    const hasToolMessages = messages.some(msg => msg._getType() === "tool");
+
+    // tool 실행 후에는 tools 없이 호출 (최종 답변 생성)
+    const selectedModel = hasToolMessages ? model : modelWithTools;
+    console.log(`- 사용 모델: ${hasToolMessages ? "tools 없음 (최종 답변)" : "tools 포함"}`);
+
+    const response = await selectedModel.invoke(messages);
     console.log(`- AI 응답: ${response.content || "(tool 호출)"}`);
     if ((response as any).tool_calls?.length > 0) {
       console.log(`- Tool 호출 개수: ${(response as any).tool_calls.length}`);

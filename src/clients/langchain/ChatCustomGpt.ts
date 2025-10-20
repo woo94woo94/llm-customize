@@ -193,6 +193,25 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       requestBody.need_origin = true;
     }
 
+    console.log("\n=== 최종 전송 메시지 ===");
+    console.log(`customAuth: ${!!this.customAuth}`);
+    console.log(`tools 포함: ${!!(this.tools && this.tools.length > 0)}`);
+    console.log("전송될 messages:");
+    formattedMessages.forEach((msg, index) => {
+      console.log(`\n[${index + 1}] ${msg.role}`);
+      console.log(`  content: ${msg.content ? (msg.content.length > 50 ? msg.content.substring(0, 50) + "..." : msg.content) : "null"}`);
+      if (msg.tool_call_id) {
+        console.log(`  tool_call_id: ${msg.tool_call_id}`);
+      }
+      if (msg.tool_calls && msg.tool_calls.length > 0) {
+        console.log(`  tool_calls: ${msg.tool_calls.length}개`);
+        msg.tool_calls.forEach((tc: any, i: number) => {
+          console.log(`    [${i + 1}] ${tc.function.name}`);
+        });
+      }
+    });
+    console.log("\n========================\n");
+
     // tools가 있으면 OpenAI API 형식으로 추가
     if (this.tools && this.tools.length > 0) {
       requestBody.tools = this.tools.map((tool) => {
