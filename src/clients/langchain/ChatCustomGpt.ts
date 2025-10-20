@@ -106,7 +106,8 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       } else if (msgType === "ai") {
         role = "assistant";
       } else if (msgType === "tool") {
-        role = "tool";
+        // customAuth 사용 시 tool을 user로 변환 (서버가 role: "tool" 지원하지 않을 수 있음)
+        role = this.customAuth ? "user" : "tool";
       }
 
       let content: string | null =
@@ -119,8 +120,8 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
         content,
       };
 
-      // ToolMessage인 경우 tool_call_id 추가
-      if (msgType === "tool" && "tool_call_id" in msg) {
+      // ToolMessage인 경우 tool_call_id 추가 (customAuth가 아닐 때만)
+      if (msgType === "tool" && "tool_call_id" in msg && !this.customAuth) {
         formatted.tool_call_id = (msg as any).tool_call_id;
       }
 
