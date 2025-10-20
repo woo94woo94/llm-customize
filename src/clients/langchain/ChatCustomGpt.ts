@@ -96,7 +96,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
    */
   private formatMessages(
     messages: BaseMessage[]
-  ): Array<{ role: string; content: string }> {
+  ): Array<{ role: string; content: string; tool_call_id?: string; tool_calls?: any[] }> {
     return messages.map((msg) => {
       const msgType = msg._getType();
       let role = "user";
@@ -105,15 +105,36 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
         role = "system";
       } else if (msgType === "ai") {
         role = "assistant";
+      } else if (msgType === "tool") {
+        role = "tool";
       }
 
-      return {
+      const formatted: { role: string; content: string; tool_call_id?: string; tool_calls?: any[] } = {
         role,
         content:
           typeof msg.content === "string"
             ? msg.content
             : JSON.stringify(msg.content),
       };
+
+      // ToolMessage인 경우 tool_call_id 추가
+      if (msgType === "tool" && "tool_call_id" in msg) {
+        formatted.tool_call_id = (msg as any).tool_call_id;
+      }
+
+      // AI 메시지에 tool_calls가 있는 경우 추가
+      if (msgType === "ai" && "tool_calls" in msg && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
+        formatted.tool_calls = (msg as any).tool_calls.map((tc: any) => ({
+          id: tc.id,
+          type: "function",
+          function: {
+            name: tc.name,
+            arguments: JSON.stringify(tc.args),
+          },
+        }));
+      }
+
+      return formatted;
     });
   }
 
@@ -256,14 +277,17 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
           }
         }
 
-        if (!content && data.response) {
-          content = data.response;
-        } else if (!content && data.answer) {
-          content = data.answer;
-        } else if (!content && data.result) {
-          content = data.result;
-        } else if (!content) {
-          content = JSON.stringify(data);
+        // content가 없는 경우 다른 필드에서 추출 (tool_calls가 없을 때만)
+        if (!content && toolCalls.length === 0) {
+          if (data.response) {
+            content = data.response;
+          } else if (data.answer) {
+            content = data.answer;
+          } else if (data.result) {
+            content = data.result;
+          } else {
+            content = JSON.stringify(data);
+          }
         }
       }
 
