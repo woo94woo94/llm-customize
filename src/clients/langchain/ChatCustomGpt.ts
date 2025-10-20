@@ -119,6 +119,13 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
           ? msg.content
           : JSON.stringify(msg.content);
 
+      // customAuth 사용 시 ToolMessage를 user로 변환하면서 tool 이름 포함
+      if (msgType === "tool" && this.customAuth && "name" in msg) {
+        const toolName = (msg as any).name;
+        content = `${toolName} 결과: ${content}`;
+        console.log(`  customAuth: tool 이름 포함 - ${toolName}`);
+      }
+
       const result: { role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] } = {
         role,
         content,
