@@ -72,9 +72,9 @@ async function main() {
 
     console.log("\n🔍 shouldContinue 체크:");
     console.log(`- 마지막 메시지 타입: ${lastMessage?._getType()}`);
-    console.log(`- tool_calls 존재: ${"tool_calls" in lastMessage}`);
-    console.log(`- tool_calls 배열: ${Array.isArray((lastMessage as any).tool_calls)}`);
-    console.log(`- tool_calls 개수: ${(lastMessage as any).tool_calls?.length || 0}`);
+    console.log(`- tool_calls 존재: ${lastMessage ? "tool_calls" in lastMessage : false}`);
+    console.log(`- tool_calls 배열: ${lastMessage ? Array.isArray((lastMessage as any).tool_calls) : false}`);
+    console.log(`- tool_calls 개수: ${(lastMessage as any)?.tool_calls?.length || 0}`);
 
     if (
       lastMessage &&
