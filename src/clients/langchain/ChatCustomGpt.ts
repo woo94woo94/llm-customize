@@ -8,7 +8,6 @@ import {
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { GptClientConfig, GptResponse } from "../../types/index.js";
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 interface ChatCustomGptOptions extends BaseChatModelCallOptions {}
 
@@ -209,21 +208,14 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     }
 
     if (this.tools && this.tools.length > 0) {
-      requestBody.tools = this.tools.map((tool) => {
-        let parameters = tool.schema;
-        if (parameters && typeof parameters === "object" && "_def" in parameters) {
-          parameters = zodToJsonSchema(parameters as any);
-        }
-
-        return {
-          type: "function",
-          function: {
-            name: tool.name,
-            description: tool.description,
-            parameters,
-          },
-        };
-      });
+      requestBody.tools = this.tools.map((tool) => ({
+        type: "function",
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.schema,
+        },
+      }));
     }
 
     try {

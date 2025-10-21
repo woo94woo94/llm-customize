@@ -1,14 +1,14 @@
 import { loadConfig } from "../config/index.js";
 import { ChatCustomGpt } from "../clients/langchain/ChatCustomGpt.js";
 import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
 
-// 간단한 날씨 조회 tool 정의
+// 간단한 날씨 조회 tool 정의 (JSON Schema 사용)
 const weatherTool = tool(
-  async ({ location }) => {
+  async (input: any) => {
+    const { location } = input;
     // 실제로는 날씨 API를 호출하지만, 여기서는 mock 데이터 반환
     const mockWeather: Record<string, string> = {
       서울: "맑음, 15°C",
@@ -20,15 +20,23 @@ const weatherTool = tool(
   {
     name: "get_weather",
     description: "특정 지역의 날씨 정보를 조회합니다",
-    schema: z.object({
-      location: z.string().describe("날씨를 조회할 지역명"),
-    }),
+    schema: {
+      type: "object",
+      properties: {
+        location: {
+          type: "string",
+          description: "날씨를 조회할 지역명",
+        },
+      },
+      required: ["location"],
+    },
   }
 );
 
-// 계산기 tool 정의
+// 계산기 tool 정의 (JSON Schema 사용)
 const calculatorTool = tool(
-  async ({ expression }) => {
+  async (input: any) => {
+    const { expression } = input;
     try {
       // 간단한 수식 계산 (위험: eval 사용, 실제로는 안전한 파서 사용 권장)
       const result = eval(expression);
@@ -40,9 +48,16 @@ const calculatorTool = tool(
   {
     name: "calculator",
     description: "수학 계산을 수행합니다",
-    schema: z.object({
-      expression: z.string().describe("계산할 수식 (예: 2 + 2)"),
-    }),
+    schema: {
+      type: "object",
+      properties: {
+        expression: {
+          type: "string",
+          description: "계산할 수식 (예: 2 + 2)",
+        },
+      },
+      required: ["expression"],
+    },
   }
 );
 
@@ -71,7 +86,10 @@ async function main() {
     const lastMessage = messages[messages.length - 1];
 
     console.log("\n🔍 shouldContinue 체크:");
-    console.log(`- 마지막 메시지 타입: ${lastMessage?._getType()}`);
+    const msgType = lastMessage instanceof AIMessage ? "ai" :
+                    lastMessage instanceof ToolMessage ? "tool" :
+                    lastMessage instanceof HumanMessage ? "human" : "unknown";
+    console.log(`- 마지막 메시지 타입: ${msgType}`);
     console.log(`- tool_calls 존재: ${lastMessage ? "tool_calls" in lastMessage : false}`);
     console.log(`- tool_calls 배열: ${lastMessage ? Array.isArray((lastMessage as any).tool_calls) : false}`);
     console.log(`- tool_calls 개수: ${(lastMessage as any)?.tool_calls?.length || 0}`);
@@ -96,7 +114,7 @@ async function main() {
     console.log(`- 현재 메시지 개수: ${messages.length}`);
 
     // tool 메시지가 있는지 확인
-    const hasToolMessages = messages.some(msg => msg._getType() === "tool");
+    const hasToolMessages = messages.some(msg => msg instanceof ToolMessage);
 
     // tool 실행 후에는 tools 없이 호출 (최종 답변 생성)
     const selectedModel = hasToolMessages ? model : modelWithTools;
@@ -151,12 +169,14 @@ async function main() {
 
     // 모든 메시지 출력
     result.messages.forEach((msg: any, index: number) => {
-      const type = msg._getType();
+      const type = msg instanceof HumanMessage ? "human" :
+                   msg instanceof AIMessage ? "ai" :
+                   msg instanceof ToolMessage ? "tool" : "unknown";
       console.log(`[${index + 1}] ${type.toUpperCase()}`);
 
-      if (type === "human") {
+      if (msg instanceof HumanMessage) {
         console.log(`내용: ${msg.content}\n`);
-      } else if (type === "ai") {
+      } else if (msg instanceof AIMessage) {
         console.log(`내용: ${msg.content || "(tool 호출)"}`);
         if (msg.tool_calls && msg.tool_calls.length > 0) {
           console.log(`Tool 호출:`);
@@ -165,7 +185,7 @@ async function main() {
           });
         }
         console.log();
-      } else if (type === "tool") {
+      } else if (msg instanceof ToolMessage) {
         console.log(`Tool: ${msg.name}`);
         console.log(`결과: ${msg.content}\n`);
       }
@@ -173,7 +193,7 @@ async function main() {
 
     // 최종 답변 출력
     const lastMessage = result.messages[result.messages.length - 1];
-    if (lastMessage && lastMessage._getType() === "ai") {
+    if (lastMessage && lastMessage instanceof AIMessage) {
       console.log("=".repeat(50));
       console.log("✅ 최종 답변:");
       console.log(lastMessage.content);
