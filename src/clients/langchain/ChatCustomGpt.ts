@@ -1,4 +1,4 @@
-import { AIMessage, BaseMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import type { ChatResult } from "@langchain/core/outputs";
 import {
   BaseChatModel,
@@ -90,14 +90,13 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     messages: BaseMessage[]
   ): Array<{ role: string; content: string | null; tool_call_id?: string; tool_calls?: any[] }> {
     return messages.map((msg) => {
-      const msgType = msg._getType();
       let role = "user";
 
-      if (msgType === "system") {
+      if (msg instanceof SystemMessage) {
         role = "system";
-      } else if (msgType === "ai") {
+      } else if (msg instanceof AIMessage) {
         role = "assistant";
-      } else if (msgType === "tool") {
+      } else if (msg instanceof ToolMessage) {
         role = this.customAuth ? "user" : "tool";
       }
 
@@ -107,7 +106,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
           : JSON.stringify(msg.content);
 
       // customAuth: ToolMessage에 tool 이름 포함
-      if (msgType === "tool" && this.customAuth && "name" in msg) {
+      if (msg instanceof ToolMessage && this.customAuth && "name" in msg) {
         content = `${(msg as any).name} 결과: ${content}`;
       }
 
@@ -117,12 +116,12 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
       };
 
       // 표준 API: tool_call_id 추가
-      if (msgType === "tool" && "tool_call_id" in msg && !this.customAuth) {
+      if (msg instanceof ToolMessage && "tool_call_id" in msg && !this.customAuth) {
         result.tool_call_id = (msg as any).tool_call_id;
       }
 
       // AI 메시지의 tool_calls 처리
-      if (msgType === "ai" && "tool_calls" in msg && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
+      if (msg instanceof AIMessage && "tool_calls" in msg && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
         if (!this.customAuth) {
           // 표준 API: tool_calls 포함
           result.tool_calls = (msg as any).tool_calls.map((tc: any) => ({
