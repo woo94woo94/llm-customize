@@ -5,6 +5,11 @@ import type {
   GptResponse,
   ChatMessage,
 } from "../../types/index.js";
+import {
+  createAuthHeader,
+  setupCustomAuthInterceptor,
+  parseResponseIfNeeded,
+} from "../../utils/auth.js";
 
 // Tool 정의
 export interface Tool {
@@ -76,40 +81,8 @@ export class ApiClient {
       },
     });
 
-    // customAuth 사용 시 POST 요청에 need_origin: true를 자동으로 추가
-    this.axiosInstance.interceptors.request.use((config) => {
-      if (this.config.customAuth && config.method === 'post' && config.data) {
-        config.data = {
-          ...config.data,
-          need_origin: true,
-        };
-      }
-      return config;
-    });
-  }
-
-  /**
-   * Authorization 헤더 생성
-   * - customAuth가 있으면: JSON을 Base64로 인코딩 (커스텀 GPT API)
-   * - customAuth가 없으면: 평문 API 키 사용 (표준 OpenAI API)
-   */
-  private createAuthHeader(): string {
-    if (this.config.customAuth) {
-      // 커스텀 GPT API 방식: base64 인코딩
-      const authJson = {
-        apiKey: this.config.apiKey,
-        systemCode: this.config.customAuth.systemCode,
-        companyCode: this.config.customAuth.companyCode,
-      };
-
-      const jsonString = JSON.stringify(authJson);
-      const base64Encoded = Buffer.from(jsonString).toString("base64");
-
-      return `Bearer ${base64Encoded}`;
-    } else {
-      // 표준 OpenAI API 방식: 평문 API 키
-      return `Bearer ${this.config.apiKey}`;
-    }
+    // customAuth 사용 시 interceptor 설정
+    setupCustomAuthInterceptor(this.axiosInstance, this.config.customAuth);
   }
 
   /**
@@ -124,7 +97,7 @@ export class ApiClient {
         temperature: request.temperature ?? 0.7,
       };
 
-      const authHeader = this.createAuthHeader();
+      const authHeader = createAuthHeader(this.config.apiKey, this.config.customAuth);
 
       console.log("\n=== Request (chat) ===");
       console.log("🔑 Request Headers:", {
@@ -207,7 +180,7 @@ export class ApiClient {
         },
       };
 
-      const authHeader = this.createAuthHeader();
+      const authHeader = createAuthHeader(this.config.apiKey, this.config.customAuth);
 
       console.log("\n=== Request (chatWithStructuredOutput) ===");
       console.log("🔑 Request Headers:", {
@@ -275,7 +248,7 @@ export class ApiClient {
         tools,
       };
 
-      const authHeader = this.createAuthHeader();
+      const authHeader = createAuthHeader(this.config.apiKey, this.config.customAuth);
 
       console.log("\n=== Request (chatWithTools) ===");
       console.log("🔑 Request Headers:", {
@@ -297,33 +270,14 @@ export class ApiClient {
 
       console.log("\n=== Response Analysis (chatWithTools) ===");
       console.log("Response status:", response.status);
-      console.log("Response headers:", response.headers);
       console.log("Response data type:", typeof response.data);
       console.log("Response data:", response.data);
 
       // customAuth를 사용하는 경우 응답이 문자열로 올 수 있음
-      if (typeof response.data === "string") {
-        console.log("\n📝 Response is string, attempting to parse...");
-        console.log("String length:", response.data.length);
-        console.log("First 200 chars:", response.data.substring(0, 200));
-        console.log("Last 200 chars:", response.data.substring(Math.max(0, response.data.length - 200)));
+      const parsedData = parseResponseIfNeeded<GptResponse>(response.data);
 
-        try {
-          const parsed = JSON.parse(response.data);
-          console.log("✅ JSON parsing successful");
-          console.log("Parsed data type:", typeof parsed);
-          console.log("Parsed data:", parsed);
-          return parsed;
-        } catch (parseError) {
-          console.error("\n❌ JSON Parse Error Details:");
-          console.error("Error:", parseError);
-          console.error("Raw string (full):", response.data);
-          throw parseError;
-        }
-      }
-
-      console.log("✅ Response data is already object, returning as-is");
-      return response.data;
+      console.log("✅ Response processed successfully");
+      return parsedData;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status || "No response";

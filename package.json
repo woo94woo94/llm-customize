@@ -10,7 +10,9 @@
     "native:structured": "tsc && node dist/examples/native-structured-output.js",
     "langchain": "tsc && node dist/examples/langchain-example.js",
     "openai": "tsc && node dist/examples/openai-example.js",
-    "tools": "tsc && node dist/examples/langgraph-with-tools.js"
+    "tools": "tsc && node dist/examples/langgraph-with-tools.js",
+    "anthropic": "tsc && node dist/examples/anthropic-example.js",
+    "anthropic:tools": "tsc && node dist/examples/anthropic-tools-example.js"
   },
   "keywords": [],
   "author": "",
