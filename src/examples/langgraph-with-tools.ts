@@ -1,4 +1,4 @@
-import { loadConfig } from "../config/index.js";
+import { loadPgptConfig } from "../config/index.js";
 import { ChatCustomGpt } from "../clients/langchain/ChatCustomGpt.js";
 import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
@@ -62,7 +62,7 @@ const calculatorTool = tool(
 );
 
 async function main() {
-  const config = loadConfig();
+  const config = loadPgptConfig();
 
   console.log("=== LangGraph + Tools 테스트 ===\n");
 

@@ -1,5 +1,5 @@
-import { loadAnthropicConfig } from "../config/index.js";
-import { AnthropicClient, type AnthropicTool } from "../clients/native/AnthropicClient.js";
+import { loadPgptConfig } from "../config/index.js";
+import { ClaudeClient, type ClaudeTool } from "../clients/native/ClaudeClient.js";
 import type { AnthropicMessage } from "../types/index.js";
 
 // Tool 실행 함수
@@ -23,7 +23,7 @@ const tools = {
 };
 
 // Tool 스키마 (Anthropic 형식)
-const toolSchemas: AnthropicTool[] = [
+const toolSchemas: ClaudeTool[] = [
   {
     name: "get_weather",
     description: "특정 지역의 날씨 정보를 조회합니다",
@@ -55,8 +55,8 @@ const toolSchemas: AnthropicTool[] = [
 ];
 
 async function main() {
-  const config = loadAnthropicConfig();
-  const client = new AnthropicClient(config);
+  const config = loadPgptConfig();
+  const client = new ClaudeClient(config);
 
   console.log("=== Anthropic API + Tools 테스트 ===\n");
 

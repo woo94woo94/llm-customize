@@ -1,12 +1,12 @@
-import { loadAnthropicConfig } from "../config/index.js";
-import { AnthropicClient } from "../clients/native/AnthropicClient.js";
+import { loadPgptConfig } from "../config/index.js";
+import { ClaudeClient } from "../clients/native/ClaudeClient.js";
 
 async function main() {
   // 환경 변수에서 설정 로드
-  const config = loadAnthropicConfig();
+  const config = loadPgptConfig();
 
   // Anthropic API 클라이언트 생성
-  const client = new AnthropicClient(config);
+  const client = new ClaudeClient(config);
 
   console.log("=== Anthropic API 직접 호출 예제 ===\n");
 

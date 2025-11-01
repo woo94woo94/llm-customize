@@ -1,11 +1,11 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { loadConfig } from "../config/index.js";
+import { loadPgptConfig } from "../config/index.js";
 
 async function main() {
   // 환경 변수에서 설정 로드
-  const config = loadConfig();
+  const config = loadPgptConfig();
 
   console.log("=== LangGraph + ChatOpenAI 예제 ===\n");
 

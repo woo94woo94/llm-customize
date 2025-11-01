@@ -5,14 +5,14 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "native": "tsc && node dist/examples/native-example.js",
-    "native:tools": "tsc && node dist/examples/native-tools-example.js",
-    "native:structured": "tsc && node dist/examples/native-structured-output.js",
+    "gpt": "tsc && node dist/examples/native-example.js",
+    "gpt:tools": "tsc && node dist/examples/native-tools-example.js",
+    "gpt:structured": "tsc && node dist/examples/native-structured-output.js",
+    "claude": "tsc && node dist/examples/anthropic-example.js",
+    "claude:tools": "tsc && node dist/examples/anthropic-tools-example.js",
     "langchain": "tsc && node dist/examples/langchain-example.js",
-    "openai": "tsc && node dist/examples/openai-example.js",
-    "tools": "tsc && node dist/examples/langgraph-with-tools.js",
-    "anthropic": "tsc && node dist/examples/anthropic-example.js",
-    "anthropic:tools": "tsc && node dist/examples/anthropic-tools-example.js"
+    "langgraph": "tsc && node dist/examples/langgraph-with-tools.js",
+    "openai": "tsc && node dist/examples/openai-example.js"
   },
   "keywords": [],
   "author": "",

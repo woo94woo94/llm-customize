@@ -1,11 +1,11 @@
-import { loadConfig } from "../config/index.js";
+import { loadPgptConfig } from "../config/index.js";
 import { ChatCustomGpt } from "../clients/langchain/ChatCustomGpt.js";
 import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 async function main() {
   // 환경 변수에서 설정 로드
-  const config = loadConfig();
+  const config = loadPgptConfig();
 
   console.log("=== LangGraph 기반 ChatCustomGpt 예제 ===\n");
 

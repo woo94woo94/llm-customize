@@ -6,24 +6,24 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
-import type { GptClientConfig, GptResponse } from "../../types/index.js";
+import type { PgptClientConfig, PgptResponse } from "../../types/index.js";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 
 interface ChatCustomGptOptions extends BaseChatModelCallOptions {}
 
-interface ChatCustomGptParams extends BaseChatModelParams, GptClientConfig {
+interface ChatCustomGptParams extends BaseChatModelParams, PgptClientConfig {
   model?: string;
   temperature?: number;
 }
 
 /**
- * LangChain 호환 Custom GPT 채팅 모델
+ * LangChain 호환 PGPT 프록시 채팅 모델
  *
  * @example
  * ```typescript
- * import { loadConfig } from "../../config/index.js";
+ * import { loadPgptConfig } from "../../config/index.js";
  *
- * const config = loadConfig();
+ * const config = loadPgptConfig();
  * const model = new ChatCustomGpt({
  *   ...config,
  *   temperature: 0.7,
@@ -53,7 +53,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
 
     if (!fields.apiUrl) {
       throw new Error(
-        "GPT_API_URL 환경변수가 설정되지 않았습니다."
+        "PGPT_API_URL 환경변수가 설정되지 않았습니다."
       );
     }
 
@@ -83,7 +83,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   }
 
   /**
-   * LangChain 메시지를 GPT API 형식으로 변환
+   * LangChain 메시지를 PGPT API 형식으로 변환
    */
   private formatMessages(
     messages: BaseMessage[]
@@ -155,7 +155,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     let toolCalls: any[] = [];
 
     try {
-      const data = JSON.parse(responseText) as GptResponse;
+      const data = JSON.parse(responseText) as PgptResponse;
 
       if (data.choices && data.choices.length > 0) {
         const firstChoice = data.choices[0];

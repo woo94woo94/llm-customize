@@ -3,11 +3,12 @@
  */
 
 /**
- * GPT API 클라이언트 설정
- * - customAuth가 있으면 커스텀 GPT API (base64 인코딩 방식)
- * - 없으면 표준 OpenAI API (평문 API 키 방식)
+ * PGPT 프록시 API 클라이언트 설정
+ * - GPT와 Claude API 모두 사용 가능한 공통 프록시 설정
+ * - customAuth가 있으면 커스텀 프록시 (base64 인코딩 방식)
+ * - 없으면 표준 API (평문 API 키 방식)
  */
-export interface GptClientConfig {
+export interface PgptClientConfig {
   apiKey: string;
   apiUrl: string;
   customAuth?: {
@@ -25,31 +26,19 @@ export interface ChatMessage {
 }
 
 /**
- * GPT API 요청 인터페이스
+ * PGPT API 요청 인터페이스 (GPT 모델용)
  */
-export interface GptRequest {
+export interface PgptRequest {
   messages: ChatMessage[];
   model?: string;
   temperature?: number;
 }
 
 /**
- * GPT API 응답 타입
+ * PGPT API 응답 타입 (GPT 모델용)
  * any로 정의하여 다양한 응답 형식을 유연하게 처리
  */
-export type GptResponse = any;
-
-/**
- * Anthropic API 클라이언트 설정
- */
-export interface AnthropicClientConfig {
-  apiKey: string;
-  apiUrl?: string; // 선택적, 기본값: https://api.anthropic.com/v1
-  customAuth?: {
-    systemCode: string;
-    companyCode: string;
-  };
-}
+export type PgptResponse = any;
 
 /**
  * Anthropic API 메시지 타입
@@ -68,9 +57,9 @@ export interface AnthropicMessage {
 }
 
 /**
- * Anthropic API 요청 인터페이스
+ * PGPT API 요청 인터페이스 (Anthropic/Claude 모델용)
  */
-export interface AnthropicRequest {
+export interface PgptAnthropicRequest {
   model: string;
   messages: AnthropicMessage[];
   max_tokens: number;
@@ -88,9 +77,9 @@ export interface AnthropicRequest {
 }
 
 /**
- * Anthropic API 응답 타입
+ * PGPT API 응답 타입 (Anthropic/Claude 모델용)
  */
-export interface AnthropicResponse {
+export interface PgptAnthropicResponse {
   id: string;
   type: "message";
   role: "assistant";

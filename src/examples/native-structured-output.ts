@@ -1,5 +1,5 @@
-import { loadConfig } from "../config/index.js";
-import { ApiClient } from "../clients/native/ApiClient.js";
+import { loadPgptConfig } from "../config/index.js";
+import { GptClient } from "../clients/native/GptClient.js";
 
 // 스키마 정의: 사용자 정보
 const userInfoSchema = {
@@ -99,8 +99,8 @@ interface EventInfo {
 }
 
 async function main() {
-  const config = loadConfig();
-  const client = new ApiClient(config);
+  const config = loadPgptConfig();
+  const client = new GptClient(config);
 
   console.log("=== Native API + Structured Output 테스트 ===\n");
 

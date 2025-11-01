@@ -1,12 +1,12 @@
-import { loadConfig } from "../config/index.js";
-import { ApiClient } from "../clients/native/ApiClient.js";
+import { loadPgptConfig } from "../config/index.js";
+import { GptClient } from "../clients/native/GptClient.js";
 
 async function main() {
   // 환경 변수에서 설정 로드
-  const config = loadConfig();
+  const config = loadPgptConfig();
 
   // GPT API 클라이언트 생성
-  const client = new ApiClient(config);
+  const client = new GptClient(config);
 
   console.log("=== GPT API 직접 호출 예제 ===\n");
 

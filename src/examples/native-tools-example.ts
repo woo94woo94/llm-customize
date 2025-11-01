@@ -1,5 +1,5 @@
-import { loadConfig } from "../config/index.js";
-import { ApiClient, type Tool } from "../clients/native/ApiClient.js";
+import { loadPgptConfig } from "../config/index.js";
+import { GptClient, type Tool } from "../clients/native/GptClient.js";
 import type { ChatMessage } from "../types/index.js";
 
 // Tool 실행 함수
@@ -61,8 +61,8 @@ const toolSchemas: Tool[] = [
 ];
 
 async function main() {
-  const config = loadConfig();
-  const client = new ApiClient(config);
+  const config = loadPgptConfig();
+  const client = new GptClient(config);
 
   console.log("=== Native API + Tools 테스트 ===\n");
 
