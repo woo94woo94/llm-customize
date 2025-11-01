@@ -42,7 +42,6 @@ export interface ClaudeTool {
 export class ClaudeClient {
   private axiosInstance: AxiosInstance;
   private config: PgptClientConfig;
-  private anthropicVersion = "2023-06-01";
 
   constructor(config: PgptClientConfig) {
     if (!config.apiKey || !config.apiUrl) {
@@ -54,7 +53,6 @@ export class ClaudeClient {
     // customAuth 사용 시 기본 헤더만 설정, 아니면 x-api-key 포함
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "anthropic-version": this.anthropicVersion,
     };
 
     // customAuth가 없으면 x-api-key 헤더 추가 (공식 Anthropic API)
@@ -101,6 +99,10 @@ export class ClaudeClient {
       }
 
       console.log("\n=== Request (Claude chat) ===");
+      console.log("📋 Headers:", JSON.stringify({
+        ...this.axiosInstance.defaults.headers,
+        ...headers
+      }, null, 2));
       if (this.config.customAuth) {
         console.log("🔑 Using customAuth with Authorization header");
       }
@@ -172,6 +174,10 @@ export class ClaudeClient {
       }
 
       console.log("\n=== Request (Claude chatWithTools) ===");
+      console.log("📋 Headers:", JSON.stringify({
+        ...this.axiosInstance.defaults.headers,
+        ...headers
+      }, null, 2));
       if (this.config.customAuth) {
         console.log("🔑 Using customAuth with Authorization header");
       }
