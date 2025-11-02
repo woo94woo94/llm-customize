@@ -8,6 +8,7 @@ import {
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { PgptClientConfig, PgptResponse } from "../../types/index.js";
 import type { StructuredToolInterface } from "@langchain/core/tools";
+import axios from "axios";
 
 interface ChatPgptGptOptions extends BaseChatModelCallOptions {}
 
@@ -220,21 +221,20 @@ export class ChatPgptGpt extends BaseChatModel<ChatPgptGptOptions> {
     }
 
     try {
-      const response = await fetch(this.apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: this.createAuthHeader(),
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await axios.post<PgptResponse>(
+        this.apiUrl,
+        requestBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: this.createAuthHeader(),
+          },
+        }
+      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`GPT API error (${response.status}): ${errorText}`);
-      }
-
-      const responseText = await response.text();
+      const responseText = typeof response.data === 'string'
+        ? response.data
+        : JSON.stringify(response.data);
       const { content, toolCalls } = this.parseResponse(responseText);
 
       const message = new AIMessage({

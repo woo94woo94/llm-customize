@@ -110,7 +110,7 @@ export class ClaudeClient {
       console.log("=================================\n");
 
       const response = await this.axiosInstance.post<PgptAnthropicResponse>(
-        "/messages",
+        "",
         requestBody,
         { headers }
       );
@@ -185,7 +185,7 @@ export class ClaudeClient {
       console.log("=========================================\n");
 
       const response = await this.axiosInstance.post<PgptAnthropicResponse>(
-        "/messages",
+        "",
         requestBody,
         { headers }
       );

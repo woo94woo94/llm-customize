@@ -8,6 +8,7 @@ import {
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { PgptClientConfig, PgptAnthropicResponse } from "../../types/index.js";
 import type { StructuredToolInterface } from "@langchain/core/tools";
+import axios from "axios";
 
 interface ChatPgptClaudeOptions extends BaseChatModelCallOptions {}
 
@@ -248,31 +249,13 @@ export class ChatPgptClaude extends BaseChatModel<ChatPgptClaudeOptions> {
     }
 
     try {
-      // URL 끝에 /messages 추가 (Claude API 엔드포인트)
-      const url = this.apiUrl.endsWith("/messages")
-        ? this.apiUrl
-        : `${this.apiUrl}/messages`;
+      const response = await axios.post<PgptAnthropicResponse>(
+        this.apiUrl,
+        requestBody,
+        { headers }
+      );
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Claude API error (${response.status}): ${errorText}`);
-      }
-
-      const responseText = await response.text();
-      let data: PgptAnthropicResponse;
-
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        throw new Error(`Failed to parse Claude API response: ${responseText}`);
-      }
-
+      const data = response.data;
       const { content, toolCalls } = this.parseResponse(data);
 
       const message = new AIMessage({
