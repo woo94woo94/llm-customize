@@ -182,16 +182,29 @@ export class ChatPgptClaude extends BaseChatModel<ChatPgptClaudeOptions> {
   }
 
   /**
-   * 응답에서 content와 tool_uses 추출
+   * 응답에서 content와 tool_uses 추출 (Anthropic 형식 전용)
    */
   private parseResponse(data: PgptAnthropicResponse): { content: string; toolCalls: any[] } {
+    // Anthropic 형식 검증
+    if (!data.content || !Array.isArray(data.content)) {
+      throw new Error(
+        `Invalid Anthropic API response format. Expected 'content' array but got: ${JSON.stringify(data).substring(0, 200)}`
+      );
+    }
+
     let content = "";
     let toolCalls: any[] = [];
 
     // content 배열에서 텍스트와 tool_use 추출
     for (const block of data.content) {
+      if (!block.type) {
+        throw new Error(
+          `Invalid content block in Anthropic response. Expected 'type' field but got: ${JSON.stringify(block).substring(0, 200)}`
+        );
+      }
+
       if (block.type === "text") {
-        content += block.text;
+        content += block.text || "";
       } else if (block.type === "tool_use") {
         toolCalls.push({
           name: block.name,
@@ -238,24 +251,35 @@ export class ChatPgptClaude extends BaseChatModel<ChatPgptClaudeOptions> {
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "anthropic-version": this.anthropicVersion,
     };
 
-    // customAuth 사용 시 Authorization, 아니면 x-api-key
+    // customAuth 사용 시 Authorization만, 아니면 공식 API용 헤더
     if (this.customAuth) {
       headers["Authorization"] = this.createAuthHeader();
     } else {
       headers["x-api-key"] = this.apiKey;
+      headers["anthropic-version"] = this.anthropicVersion;
     }
 
     try {
-      const response = await axios.post<PgptAnthropicResponse>(
+      const response = await axios.post<PgptAnthropicResponse | string>(
         this.apiUrl,
         requestBody,
         { headers }
       );
 
-      const data = response.data;
+      // customAuth 응답이 문자열로 올 수 있어 파싱
+      let data: PgptAnthropicResponse;
+      if (typeof response.data === 'string') {
+        try {
+          data = JSON.parse(response.data);
+        } catch (parseError) {
+          throw new Error(`Failed to parse Claude API response: ${response.data.substring(0, 200)}`);
+        }
+      } else {
+        data = response.data;
+      }
+
       const { content, toolCalls } = this.parseResponse(data);
 
       const message = new AIMessage({

@@ -150,39 +150,34 @@ export class ChatPgptGpt extends BaseChatModel<ChatPgptGptOptions> {
   }
 
   /**
-   * 응답에서 content와 tool_calls 추출
+   * 응답에서 content와 tool_calls 추출 (OpenAI 형식 전용)
    */
-  private parseResponse(responseText: string): { content: string; toolCalls: any[] } {
-    let content = "";
+  private parseResponse(data: PgptResponse): { content: string; toolCalls: any[] } {
+    // OpenAI 형식 검증
+    if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      throw new Error(
+        `Invalid OpenAI API response format. Expected 'choices' array but got: ${JSON.stringify(data).substring(0, 200)}`
+      );
+    }
+
+    const firstChoice = data.choices[0];
+    if (!firstChoice?.message) {
+      throw new Error(
+        `Invalid OpenAI API response format. Expected 'message' in choices[0] but got: ${JSON.stringify(firstChoice).substring(0, 200)}`
+      );
+    }
+
+    let content = firstChoice.message.content || "";
     let toolCalls: any[] = [];
 
-    try {
-      const data = JSON.parse(responseText) as PgptResponse;
-
-      if (data.choices && data.choices.length > 0) {
-        const firstChoice = data.choices[0];
-
-        if (firstChoice?.message?.content) {
-          content = firstChoice.message.content;
-        }
-
-        if (firstChoice?.message?.tool_calls) {
-          toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
-            name: tc.function.name,
-            args: JSON.parse(tc.function.arguments),
-            id: tc.id,
-            type: "tool_call",
-          }));
-        }
-      }
-
-      // content가 없는 경우 대체 필드 확인
-      if (!content && toolCalls.length === 0) {
-        content = data.response || data.answer || data.result || JSON.stringify(data);
-      }
-    } catch (parseError) {
-      // JSON 파싱 실패 시 raw text 사용
-      content = responseText;
+    // tool_calls 파싱
+    if (firstChoice.message.tool_calls && Array.isArray(firstChoice.message.tool_calls)) {
+      toolCalls = firstChoice.message.tool_calls.map((tc: any) => ({
+        name: tc.function.name,
+        args: JSON.parse(tc.function.arguments),
+        id: tc.id,
+        type: "tool_call",
+      }));
     }
 
     return { content, toolCalls };
@@ -221,7 +216,7 @@ export class ChatPgptGpt extends BaseChatModel<ChatPgptGptOptions> {
     }
 
     try {
-      const response = await axios.post<PgptResponse>(
+      const response = await axios.post<PgptResponse | string>(
         this.apiUrl,
         requestBody,
         {
@@ -232,10 +227,19 @@ export class ChatPgptGpt extends BaseChatModel<ChatPgptGptOptions> {
         }
       );
 
-      const responseText = typeof response.data === 'string'
-        ? response.data
-        : JSON.stringify(response.data);
-      const { content, toolCalls } = this.parseResponse(responseText);
+      // customAuth 응답이 문자열로 올 수 있어 파싱
+      let data: PgptResponse;
+      if (typeof response.data === 'string') {
+        try {
+          data = JSON.parse(response.data);
+        } catch (parseError) {
+          throw new Error(`Failed to parse GPT API response: ${response.data.substring(0, 200)}`);
+        }
+      } else {
+        data = response.data;
+      }
+
+      const { content, toolCalls } = this.parseResponse(data);
 
       const message = new AIMessage({
         content,
