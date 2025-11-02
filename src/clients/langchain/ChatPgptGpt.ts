@@ -9,23 +9,24 @@ import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager
 import type { PgptClientConfig, PgptResponse } from "../../types/index.js";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 
-interface ChatCustomGptOptions extends BaseChatModelCallOptions {}
+interface ChatPgptGptOptions extends BaseChatModelCallOptions {}
 
-interface ChatCustomGptParams extends BaseChatModelParams, PgptClientConfig {
+interface ChatPgptGptParams extends BaseChatModelParams, PgptClientConfig {
   model?: string;
   temperature?: number;
 }
 
 /**
- * LangChain 호환 PGPT 프록시 채팅 모델
+ * LangChain 호환 PGPT 프록시 채팅 모델 (GPT 전용)
  *
  * @example
  * ```typescript
  * import { loadPgptConfig } from "../../config/index.js";
  *
  * const config = loadPgptConfig();
- * const model = new ChatCustomGpt({
+ * const model = new ChatPgptGpt({
  *   ...config,
+ *   model: "gpt-4o",
  *   temperature: 0.7,
  * });
  *
@@ -33,7 +34,7 @@ interface ChatCustomGptParams extends BaseChatModelParams, PgptClientConfig {
  * console.log(response.content);
  * ```
  */
-export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
+export class ChatPgptGpt extends BaseChatModel<ChatPgptGptOptions> {
   apiKey: string;
   apiUrl: string;
   customAuth?: {
@@ -45,10 +46,10 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   tools?: StructuredToolInterface[];
 
   static lc_name(): string {
-    return "ChatCustomGpt";
+    return "ChatPgptGpt";
   }
 
-  constructor(fields: ChatCustomGptParams) {
+  constructor(fields: ChatPgptGptParams) {
     super(fields);
 
     if (!fields.apiUrl) {
@@ -257,8 +258,8 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
   /**
    * Tool을 모델에 바인딩
    */
-  bindTools(tools: StructuredToolInterface[]): ChatCustomGpt {
-    const params: ChatCustomGptParams = {
+  bindTools(tools: StructuredToolInterface[]): ChatPgptGpt {
+    const params: ChatPgptGptParams = {
       apiKey: this.apiKey,
       apiUrl: this.apiUrl,
       model: this.model,
@@ -267,7 +268,7 @@ export class ChatCustomGpt extends BaseChatModel<ChatCustomGptOptions> {
     if (this.customAuth) {
       params.customAuth = this.customAuth;
     }
-    const newInstance = new ChatCustomGpt(params);
+    const newInstance = new ChatPgptGpt(params);
     newInstance.tools = tools;
     return newInstance;
   }

@@ -1,5 +1,5 @@
 import { loadPgptConfig } from "../config/index.js";
-import { ChatPgptGpt } from "../clients/langchain/ChatPgptGpt.js";
+import { ChatPgptClaude } from "../clients/langchain/ChatPgptClaude.js";
 import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
@@ -64,15 +64,15 @@ const calculatorTool = tool(
 async function main() {
   const config = loadPgptConfig();
 
-  console.log("=== LangGraph + Tools 테스트 ===\n");
+  console.log("=== LangGraph + Tools 테스트 (Claude) ===\n");
 
   // tools 배열
   const tools = [weatherTool, calculatorTool];
 
-  // ChatPgptGpt 모델 생성 및 tools 바인딩
-  const model = new ChatPgptGpt({
+  // ChatPgptClaude 모델 생성 및 tools 바인딩
+  const model = new ChatPgptClaude({
     ...config,
-    model: "gpt-4o",
+    model: "claude-sonnet-4-5-20250929",
     temperature: 0.7,
   });
 
@@ -142,7 +142,7 @@ async function main() {
 
   const app = workflow.compile();
 
-  console.log("📝 테스트: Tool을 사용하는 Agent\n");
+  console.log("📝 테스트: Tool을 사용하는 Agent (Claude)\n");
   console.log("사용 가능한 tools:");
   tools.forEach((tool) => {
     console.log(`- ${tool.name}: ${tool.description}`);

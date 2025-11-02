@@ -10,8 +10,10 @@
     "gpt:structured": "tsc && node dist/examples/native-structured-output.js",
     "claude": "tsc && node dist/examples/anthropic-example.js",
     "claude:tools": "tsc && node dist/examples/anthropic-tools-example.js",
-    "langchain": "tsc && node dist/examples/langchain-example.js",
-    "langgraph": "tsc && node dist/examples/langgraph-with-tools.js",
+    "langgraph:gpt": "tsc && node dist/examples/langchain-example.js",
+    "langgraph:claude": "tsc && node dist/examples/langchain-claude-example.js",
+    "langgraph:gpt:tools": "tsc && node dist/examples/langgraph-with-tools.js",
+    "langgraph:claude:tools": "tsc && node dist/examples/langgraph-claude-tools.js",
     "openai": "tsc && node dist/examples/openai-example.js"
   },
   "keywords": [],

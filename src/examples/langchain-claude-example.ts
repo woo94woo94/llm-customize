@@ -1,5 +1,5 @@
 import { loadPgptConfig } from "../config/index.js";
-import { ChatPgptGpt } from "../clients/langchain/ChatPgptGpt.js";
+import { ChatPgptClaude } from "../clients/langchain/ChatPgptClaude.js";
 import { StateGraph, MessagesAnnotation } from "@langchain/langgraph";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
@@ -7,12 +7,12 @@ async function main() {
   // 환경 변수에서 설정 로드
   const config = loadPgptConfig();
 
-  console.log("=== LangGraph 기반 ChatPgptGpt 예제 (GPT) ===\n");
+  console.log("=== LangGraph 기반 ChatPgptClaude 예제 (Claude) ===\n");
 
-  // GPT API를 사용하는 ChatPgptGpt 객체 생성
-  const model = new ChatPgptGpt({
+  // Claude API를 사용하는 ChatPgptClaude 객체 생성
+  const model = new ChatPgptClaude({
     ...config,
-    model: "gpt-4o",
+    model: "claude-sonnet-4-5-20250929",
     temperature: 0.7,
   });
 
