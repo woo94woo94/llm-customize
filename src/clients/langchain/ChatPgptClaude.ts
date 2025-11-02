@@ -67,7 +67,11 @@ export class ChatPgptClaude extends BaseChatModel<ChatPgptClaudeOptions> {
     if (fields.customAuth) {
       this.customAuth = fields.customAuth;
     }
-    this.model = fields.model || "claude-sonnet-4-5-20250929";
+    // customAuth 사용 시 claude-sonnet-4, 아니면 전체 모델명 사용
+    const defaultModel = fields.customAuth
+      ? "claude-sonnet-4"
+      : "claude-sonnet-4-5-20250929";
+    this.model = fields.model || defaultModel;
     this.temperature = fields.temperature ?? 0.7;
     this.max_tokens = fields.max_tokens || 4096;
   }

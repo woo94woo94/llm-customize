@@ -83,8 +83,13 @@ export class ClaudeClient {
     temperature?: number;
   }): Promise<string> {
     try {
+      // customAuth 사용 시 claude-sonnet-4, 아니면 전체 모델명 사용
+      const defaultModel = this.config.customAuth
+        ? "claude-sonnet-4"
+        : "claude-sonnet-4-5-20250929";
+
       const requestBody = {
-        model: options.model || "claude-sonnet-4-5-20250929",
+        model: options.model || defaultModel,
         messages: options.messages,
         max_tokens: options.max_tokens || 4096,
         ...(options.system && { system: options.system }),
@@ -157,8 +162,13 @@ export class ClaudeClient {
     temperature?: number;
   }): Promise<PgptAnthropicResponse> {
     try {
+      // customAuth 사용 시 claude-sonnet-4, 아니면 전체 모델명 사용
+      const defaultModel = this.config.customAuth
+        ? "claude-sonnet-4"
+        : "claude-sonnet-4-5-20250929";
+
       const requestBody = {
-        model: options.model || "claude-sonnet-4-5-20250929",
+        model: options.model || defaultModel,
         messages: options.messages,
         max_tokens: options.max_tokens || 4096,
         tools: options.tools,
