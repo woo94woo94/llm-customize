@@ -1,3 +1,45 @@
+# 실 단위 당월 전망 조회 - API 호출 순서
+
+## 호출 순서
+
+### 1. 입력 검증
+- target_month 검증 (YYYYMM, 202001~203012)
+- 없으면 현재 년월 사용
+
+### 2. API 1 호출 (병렬 가능)
+`GET /api/master/cost-element-codes`
+
+### 3. API 2 호출 (병렬 가능)
+`GET /api/forecast/latest-rolling-versions`
+- 빈 결과면 종료
+
+### 4. API 3 호출
+`POST /api/forecast/monthly-profit-data`
+- 입력: target_month, API 2 결과, API 1 결과
+- 빈 결과면 종료
+
+### 5. API 4 호출
+`POST /api/master/wbs-department-mapping`
+- 입력: API 3에서 (pjt_cd, wbs_cd) 추출
+- API 3 결과에 dept_cd 조인
+
+### 6. API 5 호출
+`POST /api/master/department-hierarchy`
+- 입력: API 4에서 dept_cd 추출 (null 제외)
+- API 4 결과에 division_cd, division_nm 조인
+
+### 7. API 6 호출
+`POST /api/forecast/division-aggregation`
+- 입력: API 5 결과, API 1 결과
+
+### 8. 최종 응답
+- API 6 결과 반환
+
+## 병렬 처리
+API 1과 API 2는 동시 호출 가능
+
+
+
 *** GLOSSARY ***
 
 === [속성 이름 => 의미 설명] ===
