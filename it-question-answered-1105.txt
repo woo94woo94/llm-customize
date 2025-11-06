@@ -1,0 +1,394 @@
+# IT팀 문의 사항 - 데이터베이스 스키마 명세
+
+> schema.prisma 분석 결과, AI가 정확한 데이터 해석을 위해 명확한 정의가 필요한 필드 목록
+> 
+
+---
+
+## 1. 프로젝트 상태 코드
+
+### po_pjt_plan.system_sts_cd (프로젝트상태코드)
+
+**테이블**: po_pjt_plan
+**컬럼**: system_sts_cd (VarChar 10)
+**설명**: 프로젝트상태코드
+
+➡️ 값: 01 ~ 06 (string)
+
+☑️ 코드 : PM003
+
+✅ LABEL
+
+- 01 : 영업
+- 02 : 계약
+- 03 : 실행
+- 04 : 완료
+- 05 : 종료
+- 06 : Rejected/Drop
+
+### po_pjt_plan.biz_sts_cd (영업진행상태코드)
+
+**테이블**: po_pjt_plan
+**컬럼**: biz_sts_cd (VarChar 10)
+**설명**: 영업진행상태코드
+
+➡️ 값: 0 ~ 9 (string)
+
+☑️ 코드 : PO002
+
+✅ LABEL
+
+- 0 : 1. 기회포착 / 0. 잠재기회
+- 1 : 2. 사전영업 / 1. 사전영업
+- 2 : 2. 사전영업 / 2. 발의
+- 3 : 2. 사전영업 / 3. 제안
+- 4 : 3. 견적 / 4. 견적
+- 5 : 4. 입찰 / 5. 입찰
+- 6 : 5. 시담 / 6. 시담
+- 7 : 6. 계약 /  7. 계약
+- 8 : 7. DROP(실패) / 8. DROP(실패)
+- 9 : 9. 잠재기회 삭제 / 9. 잠재기회 삭제
+
+### po_pjt_plan.cnfm_sts_cd (비매출PJT상태)
+
+**테이블**: po_pjt_plan
+**컬럼**: cnfm_sts_cd (VarChar 2)
+**설명**: 비매출PJT상태(W:작성중, A:확인)
+
+➡️ 값: 10, 20, 50, W (string)
+
+☑️ 코드 : ?
+
+✅ LABEL
+
+- 조회안됨
+
+---
+
+## 2. 결재 관련 코드
+
+### cm_approval_trgter.approval_sts_cd (결재상태)
+
+**테이블**: cm_approval_trgter
+**컬럼**: approval_sts_cd (VarChar 10)
+**설명**: 결재 상태(공통코드 CM080)
+
+➡️ 값: 10, 50 (string)
+
+☑️ 코드 : CM080
+
+✅ LABEL
+
+- 01 : 상신
+- 05 : 결재중
+- 09 : 확인
+- 10 : 승인
+- 20 : 취소
+- 50 : 반려
+
+### po_contract.approval_sts_cd
+
+**테이블**: po_contract 등
+**컬럼**: approval_sts_cd (VarChar 60)
+
+➡️ 값: 01, 10, 50 (string)
+
+☑️ 코드 : CM080
+
+✅ LABEL → approval_sts_cd 공통 (CM080)
+
+### cm_approval_trgter.approval_pth (결재경로)
+
+**테이블**: cm_approval_trgter
+**컬럼**: approval_pth (VarChar 60)
+**설명**: 결재 경로(02모바일,01PC 공통코드 CM004)
+
+➡️ 값: 01, 02
+
+☑️ 코드 : CM004
+
+✅ LABEL
+
+- 01 : PC
+- 02 : 모바일
+
+---
+
+## 3. 부서/조직 구분 코드
+
+### cm_dept.dept_dtt_cd (부서구분코드)
+
+**테이블**: cm_dept
+**컬럼**: dept_dtt_cd (VarChar 60)
+**설명**: 부서 구분 코드
+
+✅ ➡️ 값 (LABEL): 회사, 본부, 임원, 파트, 감사, 그룹, 기타, CEO직속, 소, 공통, 부문, 부, 반, 실, 팀
+
+---
+
+## 4. 프로젝트 분류 코드
+
+### po_pjt_plan.pjt_type_id (프로젝트Type)
+
+⇒ (확정) 과 (진행)은 매우 다른 두 성격이다. 매출의 공식이 다르다. 
+
+- (확정)은 IT 등의 사업으로 확정매출이 일어난다. 매달 정산이 된다. 운영성 매출이다
+- (진행)은 개발성, 구축성 매출이다.
+
+Dictionary 발췌
+
+> 프로젝트의 업무 성격에 따라 구분됨
+> 
+> - 용역(확정), 통신(확정), 정비(확정), 단품(확정) : 운영성 사업의 매출로 년단위 계약에 따라 고정적으로 매출 발생(예 : 포스코 IT SLA 및 EIC정비 사업, 그룹사 SM사업)
+> - 용역(진행),시스템(진행) : 개발성 사업매출로 비정기적으로 발생함)
+> ※ XX(확정), XX(진행) Type은 월 단위 매출 인식 방법이 다름
+>     - XX(확정) : 고객사 청구 세금계산서 기준
+>     - XX(진행) : 원가진행률( 계약금액 *) 당월누계예정원가/총예정원가)-전월누계매출
+
+**테이블**: po_pjt_plan
+**컬럼**: pjt_type_id (VarChar 10)
+**설명**: 프로젝트Type
+
+➡️ 값: 10000, 10001, 10003, 10004, 10005, 10006, 10008, NULL
+
+☑️ 코드: PO011
+
+✅ LABEL
+
+- 10000 : 비매출
+- 10001 : 비가동Dummy
+- 10003 : 정비(확정)
+- 10004 : 단품(확정)
+- 10005 : 용역(진행)
+- 10006 : 용역(확정)
+- 10008 : 통신(확정)
+    
+    
+
+### po_pjt_plan.pbs_*_type_cd (PBS코드)
+
+**테이블**: po_pjt_plan
+**컬럼**: pbs_big_type_cd, pbs_middle_type_cd, pbs_small_type_cd (각 VarChar 30)
+**설명**: PBS 대/중/소분류코드
+
+**PBS는 프로젝트의 본질(사업 분류)을 정의하는 코드 체계** 
+
+➡️ 값: Data Dictionary 발췌
+
+| **PBS코드** | **PBS_대분류** | **PBS_중분류** | **PBS_소분류** |
+| --- | --- | --- | --- |
+| PEE1100 | IT | Smart Home | Smart Home |
+| PEE1200 | IT | 솔루션_Smart Management | RPA |
+| PEE1201 | IT | 솔루션_Smart Management | CREDEX |
+| PEE400 | IT | IT Infra | IT인프라 구축/운영 |
+| PEE401 | IT | IT Infra | 통신 및 부가서비스 |
+| PEE500 | IT | IT Operation | 포스코_운영(SLA) |
+| PEE501 | IT | IT Operation | 포스코_개발 |
+| PEE502 | IT | IT Operation | Family_운영 |
+| PEE503 | IT | IT Operation | Family_개발 |
+| PEE601 | IT | 대외IT | IT서비스(SI) |
+| PEE602 | IT | 대외IT | 단품 솔루션 판매 및 운영 |
+| PEE900 | IT | 교통 | 민자도로 교통시스템 |
+| PEE902 | IT | 교통 | 교통관리시스템(ITS, C-ITS) |
+| PFF300 | EIC | 철강EIC | 철강/제조플랜트 자동화 |
+| PFF400 | EIC | EIC정비 | 시운전 |
+| PFF401 | EIC | EIC정비 | 전담정비 |
+| PFF600 | EIC | 이차전지소재EIC | 이차전지소재 자동화 |
+| PHH200 | 에너지 | 신재생/MG | 친환경/신재생에너지 |
+| PJJ000 | Smart Factory | Smart Factory_IT | 진단/컨설팅 |
+| PJJ001 | Smart Factory | Smart Factory_IT | App서비스 |
+| PJJ002 | Smart Factory | Smart Factory_IT | PosFrame적용/확산 |
+| PJJ100 | Smart Factory | Smart Factory_EIC | 제조공장 Smart화 |
+| PJJ101 | Smart Factory | Smart Factory_EIC | PosMaster |
+| PJJ102 | Smart Factory | Smart Factory_EIC | PosDrive |
+| PJJ103 | Smart Factory | Smart Factory_EIC | 로봇 엔지니어링 |
+| PKK100 | Smart 물류 | 공항물류 | 공항물류 |
+| PKK200 | Smart 물류 | 제조물류 | 제조물류 |
+| PKK300 | Smart 물류 | 유통물류 | 유통물류 |
+| PLL000 | 탄소환경 | 효율화/DR | 에너지효율화 |
+| PLL001 | 탄소환경 | 효율화/DR | 전력수요반응(DR) |
+| PLL100 | 탄소환경 | 탄소/환경 관리 시스템 | TMS |
+| PLL101 | 탄소환경 | 탄소/환경 관리 시스템 | 탄소/환경시스템 |
+| PMM000 | Safety | Safety | Smart Safety |
+| PMM001 | Safety | Safety | Smart CCTV |
+| PMM002 | Safety | Safety | Smart현장관리 |
+
+---
+
+## 5. 원가 관련 코드
+
+⇒ SAP으로 계산이 된 매출과 이익이 테이블에 그대로 기록된다. 이것을 4대원가로 나누어서 쪼개는 질문까지는 안들어갈듯
+
+### pm_comcst_othexp_rsl.cst_ele_cd (원가요소코드)
+
+**테이블**: pm_comcst_othexp_rsl, pm_pjt_exe_profit 등 다수
+**컬럼**: cst_ele_cd (VarChar 10)
+**설명**: 원가요소코드
+
+☑️ 코드: 
+
+### pm_pjt_exe_profit.cst_ty_cd (원가요소구분)
+
+⇒ pm_exe_plan_ver와 한묶음이다. << 이 테이블은 롤링데이터를 기록함.
+
+롤링데이터에 올라간 손익은 pm_pjt_exe_profit 테이블에 전부 기록되어 있음.
+
+**테이블**: pm_pjt_exe_profit
+**컬럼**: cst_ty_cd (VarChar 5)
+**설명**: 원가요소구분
+
+➡️ 값: 
+
+### pm_mcst_plan.acct_dtt (계정구분)
+
+**테이블**: pm_mcst_plan, pm_mcst_rsl
+**컬럼**: acct_dtt (VarChar 10)
+**설명**: 계정구분(재료비: 30, 협력작업비: 40) << 이것만 있음.
+
+➡️ 값: 
+
+### pm_lcst_prmpc_rsl.lcst_ty_cd (노무비구분)
+
+**테이블**: pm_lcst_prmpc_rsl
+**컬럼**: lcst_ty_cd (VarChar 2)
+**설명**: 노무비:10/인건비성경비:20 구분
+
+➡️ 값: 
+
+### cm_costct_mst.costct_ty_cd (코스트센터구분코드)
+
+**테이블**: cm_costct_mst
+**컬럼**: costct_ty_cd (VarChar 7)
+**설명**: 코스트센터구분코드
+
+➡️ 값: 
+
+### cm_costct_mst.costct_grp_cd (원가구분)
+
+**테이블**: cm_costct_mst
+**컬럼**: costct_grp_cd (VarChar 7)
+**설명**: 공통코드 : BP043 원가구분
+
+➡️ 값: 
+
+---
+
+## 6. 금액 및 수치 단위
+
+⇒ 전부 원이다.
+
+---
+
+## 7. 외부 시스템 연계
+
+⇒ 전부 안쓴다.
+
+---
+
+## 8. 버전 관리
+
+### pm_exe_plan_ver.ver (실행계획버전)
+
+⇒ 롤링버전관리(매우중요!!!)
+
+⇒ 매출은 롤링데이터로 봐라
+
+pm_exe_plan_ver.approval_sts_cd << 10이면 승인됨
+
+**테이블**: pm_exe_plan_ver
+**컬럼**: ver (Decimal)
+
+### 계획 버전 (po_plan_mth_mgt.plan_ver)
+
+⇒ 현재 프로젝트의 수주전망
+
+**테이블**: po_plan_mth_mgt
+**컬럼**: plan_ver (Decimal)
+
+---
+
+## 9. View 정의 및 계산 로직
+
+⇒ View 테이블은 따로 볼만한 가치가 있을지도?!
+
+### po_cont_est_profit_fst_v (최초계약 손익 view)
+
+### po_cont_est_profit_lst_v (최종계약 손익 view)
+
+### pm_pjt_exe_profit_hv (손익 hold + 일반 union view?)
+
+### pm_dclz_plan_hv (인력투입 hold + 일반 union view?)
+
+---
+
+## 10. 데이터 정합성 규칙
+
+### 프로젝트-WBS 관계
+
+**WBS는 프로젝트를 수행하는 실제 조직을 나타내는 코드 체계**
+
+00은 영업 부서
+
+### 계약-프로젝트 관계
+
+⇒ po_contract는 계약, po_contract_chg는 변경계약. 
+
+계약이 생기면 po_contract에 record가 들어가고, 계약에 변경이 생기면 po_contract_chg에 record가 생기면서 업데이트가 된다. 계약하나 = po_contract(1) + po_contract_chg(N)
+
+### 계약 변경 이력
+
+### 버전별 데이터 존재 여부
+
+---
+
+## 11. 전망/계획/실적 데이터 구분
+
+⇒ 12와 매우 밀접하게 연관되어 있음.
+
+**전망은 실적을 반영해 최신 예측을 기록한 "진행형 계획 데이터"이며,**
+
+**계획은 그 예측을 버전 단위로 저장해 관리하는 체계다.**
+
+결산이 완료되면 해당 기간의 전망은 더 이상 갱신되지 않고 "실적"으로 대체된다.
+
+---
+
+## 12. 마감/Close 관리
+
+⇒ year month에 대한 결산 여부가 나와있음. 실질적으로 못쓸거같음.(5년동안 60개의 row가 있음 12x5)
+
+### pm_period_close (프로젝트 마감 관리)
+
+---
+
+## 13. 공통코드 전체 목록
+
+**최우선 요청 사항**
+
+---
+
+**작성일**: 2025-11-05
+**작성자**: AI Analysis
+**목적**: PMS API 구현을 위한 데이터베이스 스키마 명세 확정
+
+
+
+기타 추가
+
+1. po_plan_mth_mgt 테이블 사용법
+  - start_year + m1~m24 컬럼으로 M+3를 어떻게 계산하나요?
+    => 1. start_year로부터 최대 24개월
+  - "당월 전망"은 어떤 기준으로 구분하나요? (plan_ver? 최신 데이터?)
+    => 당월의 기준은 입력된 target_month로부터 최대 3개월 (단, 종료일이 지난 경우 종료일을 기준으로 계산)
+
+2. 수주가능성 구분
+  - po_pjt_plan.biz_chk 필드의 값
+    => Y or N
+  - suju_score
+    => 0부터 25까지 정수값
+
+3. 전망 데이터
+  - rolling 데이터는 PM이 매월 기록. ver가 기록된 시점을 통해 유추 가능
+
+4. 직접이익 계산 로직
+  - 아니면 매출 - (노무비 + 재료비 + 경비)

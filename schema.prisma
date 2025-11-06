@@ -1,0 +1,1380 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 공통 코드 타입
+model cm_com_cd_ty {
+  ty_cd           String   @id @db.VarChar(30)  // 유형 코드
+  ty_nm           String   @db.VarChar(200)     // 유형 명
+  use_sys_cd      String   @db.VarChar(60)      // 사용 시스템 코드
+  rm_cn           String?  @db.VarChar(300)     // 비고 내용
+  begin_de        String?  @db.VarChar(8)       // 시작 일자
+  end_de          String?  @db.VarChar(8)       // 종료 일자
+  use_yn          String   @default("Y") @db.VarChar(1) // 사용 여부
+  attr_1_nm       String?  @db.VarChar(100)     // 속성 1 명
+  attr_2_nm       String?  @db.VarChar(100)     // 속성 2 명
+  attr_3_nm       String?  @db.VarChar(100)     // 속성 3 명
+  attr_4_nm       String?  @db.VarChar(100)     // 속성 4 명
+  attr_5_nm       String?  @db.VarChar(100)     // 속성 5 명
+  attr_6_nm       String?  @db.VarChar(100)     // 속성 6 명
+  attr_7_nm       String?  @db.VarChar(100)     // 속성 7 명
+  attr_8_nm       String?  @db.VarChar(100)     // 속성 8 명
+  attr_9_nm       String?  @db.VarChar(100)     // 속성 9 명
+  attr_10_nm      String?  @db.VarChar(100)     // 속성 10 명
+  lst_upt_pgm_no  Decimal  @default(0)          // 최종수정프로그램번호
+  fst_creat_emp_id Decimal                      // 최초생성사원아이디
+  fst_creat_de    DateTime @default(now())      // 최초생성일자
+  lst_upt_emp_id  Decimal?                      // 최종수정사원아이디
+  lst_upt_de      DateTime? @default(now())     // 최종수정일자
+
+  @@map("cm_com_cd_ty")
+}
+
+// 공통 코드
+model cm_com_cd {
+  ty_cd      String  @db.VarChar(30) // 유형 코드
+  com_cd     String  @db.VarChar(60) // 공통 코드
+  com_cd_nm  String  @db.VarChar(80) // 공통 코드 명
+  rm_cn      String? @db.VarChar(300) // 비고 내용
+  begin_de   String? @db.VarChar(8) // 시작 일자 (YYYYMMDD)
+  end_de     String? @db.VarChar(8) // 종료 일자 (YYYYMMDD)
+  sort_no    Int?    @default(0) // 정렬 번호
+  use_yn     String  @default("Y") @db.VarChar(1) // 사용 여부 (Y: 사용, N: 미사용)
+  attr_1_cn  String? @db.VarChar(100) // 속성 1 내용
+  attr_2_cn  String? @db.VarChar(100) // 속성 2 내용
+  attr_3_cn  String? @db.VarChar(100) // 속성 3 내용
+  attr_4_cn  String? @db.VarChar(100) // 속성 4 내용
+  attr_5_cn  String? @db.VarChar(100) // 속성 5 내용
+  attr_6_cn  String? @db.VarChar(100) // 속성 6 내용
+  attr_7_cn  String? @db.VarChar(100) // 속성 7 내용
+  attr_8_cn  String? @db.VarChar(100) // 속성 8 내용
+  attr_9_cn  String? @db.VarChar(100) // 속성 9 내용
+  attr_10_cn String? @db.VarChar(100) // 속성 10 내용
+
+  lst_upt_pgm_no   Int       @default(0) // 최종수정프로그램번호
+  fst_creat_emp_id Int // 최초생성사원아이디
+  fst_creat_dt     DateTime  @default(now()) // 최초생성일시
+  lst_upt_emp_id   Int? // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) // 최종수정일시
+
+  fst_creat_de String? @db.VarChar(50) // 최초생성일자
+  lst_upt_de   String? @db.VarChar(50) // 최종수정일자
+  // @@schema("proj")
+
+  @@id([ty_cd, com_cd])
+  @@map("cm_com_cd")
+}
+
+// 결재자 정보
+model cm_approval_trgter {
+  approval_id      Decimal  @db.Decimal // 결재 ID
+  approval_odr_no  Decimal  @db.Decimal // 결재 차수 번호(1차,2차3차)
+  approval_empno   String?  @db.VarChar(20) // 결재자 사번
+  approval_dept_cd String?  @db.VarChar(30) // 결재 부서 코드
+  approval_sts_cd  String?  @db.VarChar(10) // 결재 상태 (공통코드 CM080)
+  approval_date    String?  @db.VarChar(8) // 결재 일자 (YYYYMMDD)
+  approval_time    String?  @db.VarChar(6) // 결재 시간 (HHMMSS)
+  approval_rsn     String?  @db.VarChar(4000) // 결재 사유
+  approval_pth     String?  @db.VarChar(60) // 결재 경로 (공통코드 CM004)
+  lst_upt_pgm_no   Decimal  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal  @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime @default(now()) @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id   Decimal  @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime @default(now()) @db.Timestamp(6) // 최종수정일자
+  // @@schema("proj")
+
+  @@id([approval_id, approval_odr_no])
+  @@map("cm_approval_trgter")
+}
+
+// 부서정보
+model cm_dept {
+  dept_cd            String   @db.VarChar(80) // 부서 코드
+  upper_dept_cd      String?  @db.VarChar(80) // 상위 부서 코드
+  dept_nm            String   @db.VarChar(100) // 부서 명
+  dept_dtt_cd        String?  @db.VarChar(60) // 부서 구분 코드 (회사, 본부, 임원, 파트, 감사, 그룹, 기타, CEO직속, 소, 공통, 부문, 부, 반, 실, 팀)
+  use_yn             String?  @default("Y") @db.VarChar(1) // 사용 여부
+  dept_begin_de      String?  @db.VarChar(10) // 부서 시작 일자
+  dept_end_de        String?  @db.VarChar(10) // 부서 종료 일자
+  sort_no            Decimal? @default(0) @db.Decimal // 정렬 번호
+  dept_all_nm        String?  @db.VarChar(100) // 부서 전체 명
+  dept_eng_nm        String?  @db.VarChar(100) // 부서 영문 명
+  prmpc_dept_cd      String?  @db.VarChar(80) // 원가 부서 코드
+  prmpc_dept_ty_cd   String?  @db.VarChar(60) // 원가 부서 타입 코드
+  dept_lc            String?  @db.VarChar(60) // 부서 위치
+  hr_organization_id Decimal? @db.Decimal // Standard HRMS ORG ID
+  old_prmpc_dept_cd  String?  @db.VarChar(50) // 구 원가 부서 코드
+  job_dtt_cd         String?  @db.VarChar(60) // 업무 구분 코드
+  revenue_yn         String?  @default("N") @db.VarChar(1) // 매출 여부
+  lst_upt_pgm_no     Decimal  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id   Decimal  @db.Decimal // 최초생성사원아이디
+  fst_creat_de       DateTime @default(now()) @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id     Decimal  @db.Decimal // 최종수정사원아이디
+  lst_upt_de         DateTime @default(now()) @db.Timestamp(6) // 최종수정일자
+  // @@schema("proj")
+
+  @@id([dept_cd])
+  @@index([upper_dept_cd])
+  @@map("cm_dept")
+}
+
+// 직원정보
+model cm_emp {
+  emp_id                 Decimal  @id @db.Decimal // 사원 아이디
+  empno                  String   @db.VarChar(20) // 사원번호
+  emp_nm                 String   @db.VarChar(60) // 사원 명
+  dept_cd                String?  @db.VarChar(80) // 부서 코드
+  nm_cd                  String?  @db.VarChar(60) // 호칭 코드
+  snr_emp_id             Decimal? @db.Decimal // 상위자 사원 아이디
+  work_area_cd           String?  @db.VarChar(60) // 주재지 코드
+  work_plc_cd            String?  @db.VarChar(60) // 근무 장소 코드
+  ecny_de                String?  @db.VarChar(10) // 입사 일자
+  rtrm_de                String?  @db.VarChar(10) // 퇴사 일자
+  jbgp_cd                String?  @db.VarChar(60) // 직군 코드
+  email                  String?  @db.VarChar(100) // 이메일
+  mbtl_telno             String?  @db.VarChar(50) // 휴대폰 전화번호
+  ofrm_telno             String?  @db.VarChar(50) // 사무실 전화번호
+  biz_rl_cn              String?  @db.VarChar(100) // 사업 실 내용
+  biz_part_cn            String?  @db.VarChar(100) // 사업 부 내용
+  acnut_1_bnk_cd         String?  @db.VarChar(10) // 계좌 1 은행 코드
+  acnut_1_acnutno        String?  @db.VarChar(50) // 계좌 1 계좌번호
+  acnut_1_dpstr_nm       String?  @db.VarChar(50) // 계좌 1 예금주 성명
+  acnut_2_bnk_cd         String?  @db.VarChar(10) // 계좌 2 은행 코드
+  acnut_2_acnutno        String?  @db.VarChar(50) // 계좌 2 계좌번호
+  acnut_2_dpstr_nm       String?  @db.VarChar(50) // 계좌 2 예금주 성명
+  duty_noti_exclude_flag String?  @default("N") @db.VarChar(10) // 근무지시 제외 플래그
+  lst_upt_pgm_no         Decimal  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id       Decimal  @db.Decimal // 최초생성사원아이디
+  fst_creat_de           DateTime @default(now()) @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id         Decimal  @db.Decimal // 최종수정사원아이디
+  lst_upt_de             DateTime @default(now()) @db.Timestamp(6) // 최종수정일자
+  // @@schema("proj")
+
+  @@index([empno])
+  @@index([dept_cd])
+  @@map("cm_emp")
+}
+
+// CostCenter Master
+model cm_costct_mst {
+  costct_ty_cd     String    @db.VarChar(7) // 코스트센터구분코드
+  costct_cd        String    @db.VarChar(8) // 코스트센터코드
+  costct_nm        String?   @db.VarChar(50) // 코스트센터명
+  costct_grp_cd    String?   @db.VarChar(7) // 공통코드 : BP043 원가구분
+  up_costct_cd     String?   @db.VarChar(6) // 상위코스트센터코드
+  sta_dt           String?   @db.VarChar(8) // 시작일자 (YYYYMMDD)
+  end_dt           String?   @db.VarChar(8) // 종료일자 (YYYYMMDD)
+  old_costct_cd    String?   @db.VarChar(6) // 구코스트센터코드
+  old_costct_nm    String?   @db.VarChar(50) // 구코스트센터명
+  costct_loc_nm    String?   @db.VarChar(20) // 코스트센터속성_지역명
+  lst_upt_pgm_no   Decimal?  @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @db.Decimal // 최초생성사원아이디.
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일시
+  lst_upt_emp_id   Decimal?  @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일시
+  // @@schema("proj")
+
+  @@id([costct_cd, costct_ty_cd])
+  @@index([up_costct_cd])
+  @@map("cm_costct_mst")
+}
+
+// 공통비+기타경비 실적
+model pm_comcst_othexp_rsl {
+  pjt_cd           String   @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String   @db.VarChar(15) // WBS Code
+  rsl_ym           String   @db.VarChar(6) // 실적년월 (YYYYMM)
+  cst_ele_cd       String   @db.VarChar(10) // 원가요소코드
+  rsl_amt          Decimal? @db.Decimal // 실적금액
+  attr1            String?  @db.VarChar(250) // 여분1
+  attr2            String?  @db.VarChar(250) // 여분2
+  attr3            String?  @db.VarChar(250) // 여분3
+  attr4            String?  @db.VarChar(250) // 여분4
+  attr5            String?  @db.VarChar(250) // 여분5
+  attr6            String?  @db.VarChar(250) // 여분6
+  attr7            String?  @db.VarChar(250) // 여분7
+  attr8            Decimal? @db.Decimal // 여분8
+  attr9            Decimal? @db.Decimal // 여분9
+  attr10           Decimal? @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, wbs_cd, rsl_ym, cst_ele_cd])
+  @@map("pm_comcst_othexp_rsl")
+}
+
+// 공통비 계획(프로젝트 버전 WBS 년월)
+model pm_comcst_ym_plan {
+  pjt_cd           String   @db.VarChar(15) // 프로젝트코드
+  ver              Decimal  @db.Decimal // 실행계획버전
+  wbs_cd           String   @db.VarChar(15) // WBS Code
+  sec_cst_ele_cd   String   @db.VarChar(10) // 원가요소코드
+  plan_ym          String   @db.VarChar(6) // 년월 (YYYYMM)
+  comcst_amt       Decimal? @db.Decimal // 공통비금액
+  lst_upt_pgm_no   Decimal  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, ver, wbs_cd, sec_cst_ele_cd, plan_ym])
+  @@map("pm_comcst_ym_plan")
+}
+
+// 노무비_인력투입계획
+model pm_dclz_plan {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  ver              Decimal   @db.Decimal // 실행계획버전
+  wbs_cd           String    @db.VarChar(15) // WBS Code
+  plan_ym          String    @db.VarChar(6) // 년월 (YYYYMM)
+  empno            String    @db.VarChar(10) // 사원번호
+  sclps_div_cd     String?   @db.VarChar(10) // 신분코드
+  jgrade_div_cd    String?   @db.VarChar(20) // 직급구분코드
+  man_hour         Decimal?  @db.Decimal // M/H
+  man_month        Decimal?  @db.Decimal // M/M
+  lbr_amt          Decimal?  @db.Decimal // 노무비
+  lbr_exp_amt      Decimal?  @db.Decimal // 인건비성 경비
+  lbr_etc_amt      Decimal?  @db.Decimal // 기타경비
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, ver, wbs_cd, plan_ym, empno])
+  @@index([pjt_cd, ver, wbs_cd, plan_ym])
+  @@map("pm_dclz_plan")
+}
+
+// 경비계획
+model pm_ecst_plan {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  ver              Decimal   @db.Decimal // 실행계획버전
+  wbs_cd           String    @db.VarChar(15) // WBS Code
+  plan_ym          String    @db.VarChar(6) // 년월 (YYYYMM)
+  sec_cst_ele_cd   String    @db.VarChar(10) // 원가요소코드
+  ecst_amt         Decimal?  @db.Decimal // 금액
+  ecst_rm          String?   @db.VarChar(200) // 비고
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, ver, wbs_cd, plan_ym, sec_cst_ele_cd])
+  @@map("pm_ecst_plan")
+}
+
+// 경비실적
+model pm_ecst_rsl {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String    @db.VarChar(15) // WBS Code
+  rsl_ym           String    @db.VarChar(6) // 실적년월 (YYYYMM)
+  sec_cst_ele_cd   String    @db.VarChar(10) // 원가요소코드
+  ecst_amt         Decimal?  @db.Decimal // 금액
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, wbs_cd, rsl_ym, sec_cst_ele_cd])
+  @@map("pm_ecst_rsl")
+}
+
+// 실행계획 버전관리
+model pm_exe_plan_ver {
+  pjt_cd             String    @db.VarChar(15) // 프로젝트코드
+  ver                Decimal   @db.Decimal // 실행계획버전
+  exe_begin_date     String?   @db.VarChar(8) // 실행시작일 (YYYYMMDD)
+  exe_end_date       String?   @db.VarChar(8) // 실행종료일 (YYYYMMDD)
+  approval_id        Decimal?  @db.Decimal // 승인요청번호(결재공통 연결)
+  boq_ver            String?   @db.VarChar(5) // boq version
+  bgt_yy             String?   @db.VarChar(4) // 예산년도
+  bgt_class_cd       String?   @db.VarChar(10) // 예산분류코드
+  bgt_if_dt          DateTime? @db.Timestamp(6) // 경영계획 I/F 일시
+  approval_sts_cd    String?   @db.VarChar(10) // 결재상태코드 (공통코드 CM080)
+  exe_sts_cd         String?   @db.VarChar(10) // (폐기예정)approval_sts_cd로 대체함
+  if_yn              String?   @db.VarChar(2) // I/F 여부
+  exc_mbr_no         Decimal?  @db.Decimal // 실행기간 변경 관리번호 (시퀀스)
+  apl_request_dt     DateTime? @db.Timestamp(6) // 승인요청일시
+  apl_request_emp_no Decimal?  @db.Decimal // 승인 요청자 사번
+  apl_date           String?   @db.VarChar(8) // 승인완료일 (YYYYMMDD)
+  lst_upt_pgm_no     Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id   Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt       DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id     Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt         DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  lst_roll_date      DateTime? @db.Timestamp(6) // 최종롤링일자(0ver)
+  big_mtl_ym         String?   @db.VarChar(6) // 과대재료비발생년월 (YYYYMM)
+  // @@schema("proj")
+
+  @@id([pjt_cd, ver])
+  @@index([apl_date(sort: Desc)])
+  @@map("pm_exe_plan_ver")
+}
+
+// 프로젝트 Key Member
+model pm_key_mbr {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  empno            String    @db.VarChar(10) // 사번
+  pjt_role_cd      String    @db.VarChar(10) // 업무 롤 코드
+  job_dfw          String?   @db.VarChar(200) // 업무 분장
+  begin_date       String    @db.VarChar(8) // 투입시작일 (YYYYMMDD)
+  end_date         String?   @db.VarChar(8) // 투입종료일 (YYYYMMDD)
+  use_yn           String?   @db.VarChar(1) // 사용여부
+  seq              Int       @id @default(autoincrement()) // 시퀀스번호
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  boq_yn           String?   @db.VarChar(1) // boq조회가능 여부
+  // @@schema("proj")
+
+  @@unique([pjt_cd, empno, pjt_role_cd, begin_date, seq])
+  @@map("pm_key_mbr")
+}
+
+// 노무비,인건비성경비 실적
+model pm_lcst_prmpc_rsl {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String    @db.VarChar(15) // WBS Code
+  rsl_ym           String    @db.VarChar(6) // 실적년월 (YYYYMM)
+  empno            String    @db.VarChar(10) // 사원관리번호
+  sec_cst_ele_cd   String    @db.VarChar(10) // 원가요소코드
+  man_hour         Decimal?  @db.Decimal // M/H
+  cc_cd            String?   @db.VarChar(10) // Cost Center 코드
+  sclps_div_cd     String?   @db.VarChar(10) // 신분코드
+  jgrade_div_cd    String?   @db.VarChar(20) // 직급구분코드
+  lcst_ty_cd       String?   @db.VarChar(2) // 노무비:10/인건비성경비:20 구분
+  lcst_amt         Decimal?  @db.Decimal // 금액
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, wbs_cd, rsl_ym, empno, sec_cst_ele_cd])
+  @@map("pm_lcst_prmpc_rsl")
+}
+
+// 재료비,협력작업비 계획
+model pm_mcst_plan {
+  pjt_cd           String   @db.VarChar(15) // 프로젝트코드
+  ver              Decimal  @db.Decimal // 실행계획버전
+  wbs_cd           String   @db.VarChar(15) // WBS Code
+  boq_po_set_no    String   @db.VarChar(10) // 발주단위번호
+  plan_ym          String   @db.VarChar(6) // 년월 (YYYYMM)
+  acct_dtt         String   @db.VarChar(10) // 계정구분(재료비: 30, 협력작업비 40)
+  plan_ty_cd       String   @default("1") @db.VarChar(5) // 입력구분(1:직접입력,9:자동계산)
+  plan_amt         Decimal? @db.Decimal // 계획금액
+  lst_upt_pgm_no   Decimal? @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, ver, wbs_cd, boq_po_set_no, plan_ym, acct_dtt, plan_ty_cd])
+  @@map("pm_mcst_plan")
+}
+
+// 재료비,협력작업비 실적
+model pm_mcst_rsl {
+  pjt_cd           String   @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String   @db.VarChar(15) // WBS Code
+  rsl_ym           String   @db.VarChar(6) // 실적년월 (YYYYMM)
+  sec_cst_ele_cd   String   @db.VarChar(10) // 원가요소코드
+  acct_dtt         String   @db.VarChar(10) // 계정구분(재료비:30, 협력작업비:40)
+  boq_po_set_no    String   @db.VarChar(10) // 발주단위번호
+  item_cd          String   @db.VarChar(20) // Item코드
+  item_spec        String?  @db.VarChar(500) // 상세내역
+  po_no            String?  @db.VarChar(18) // PO Number
+  po_line_no       String?  @db.VarChar(18) // PO Line Number
+  rsl_amt          Decimal? @db.Decimal // 실적금액
+  plan_ty_cd       String?  @db.VarChar(5) // 입력구분(1:직접입력,9:자동계산)
+  plan_amt         Decimal? @db.Decimal // 계획금액
+  attr1            String?  @db.VarChar(250) // 여분1
+  attr2            String?  @db.VarChar(250) // 여분2
+  attr3            String?  @db.VarChar(250) // 여분3
+  attr4            String?  @db.VarChar(250) // 여분4
+  attr5            String?  @db.VarChar(250) // 여분5
+  attr6            String?  @db.VarChar(250) // 여분6
+  attr7            String?  @db.VarChar(250) // 여분7
+  attr8            Decimal? @db.Decimal // 여분8
+  attr9            Decimal? @db.Decimal // 여분9
+  attr10           Decimal? @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal? @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  // Note: DDL에는 PRIMARY KEY가 없지만, Prisma 요구사항을 만족시키기 위해 @@id 추가
+  // 실제 DB에는 INDEX만 존재하며, @@id는 Prisma Client 생성을 위한 것임
+  @@id([pjt_cd, wbs_cd, acct_dtt, boq_po_set_no, rsl_ym, item_cd])
+  @@map("pm_mcst_rsl")
+}
+
+// 프로젝트 마감 관리
+model pm_period_close {
+  work_ym          String    @id @db.VarChar(6) // 년월 (YYYYMM)
+  close_yn         String?   @db.VarChar(1) // 마감여부
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@map("pm_period_close")
+}
+
+// 결재중 실적보관 대상
+model pm_period_late_apply {
+  rls_ym           String    @db.VarChar(6) // 실적년월 (YYYYMM)
+  pjt_cd           String    @db.VarChar(10) // 프로젝트코드
+  apply_yn         String?   @default("N") @db.VarChar(1) // 적용여부
+  approval_id      Decimal?  @db.Decimal // 결재ID
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  apply_msg        String?   @db.VarChar(1000) // 적용 메시지
+  // @@schema("proj")
+
+  // Note: DDL에는 PRIMARY KEY가 없지만, Prisma 요구사항을 만족시키기 위해 @@id 추가
+  // 실제 DB에는 INDEX만 존재하며, @@id는 Prisma Client 생성을 위한 것임
+  @@id([rls_ym, pjt_cd])
+  @@map("pm_period_late_apply")
+}
+
+// 실행계획손익종합
+model pm_pjt_exe_profit {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String    @db.VarChar(15) // WBS 코드
+  ver              Decimal   @db.Decimal // 실행계획버전
+  plan_lvl         Decimal?  @db.Decimal // 레벨
+  plan_ym          String    @db.VarChar(6) // 년월 (YYYYMM)
+  cst_ty_cd        String?   @db.VarChar(5) // 원가요소구분
+  cst_ele_cd       String    @db.VarChar(10) // 원가요소코드
+  up_cst_ele_cd    String?   @db.VarChar(30) // 상위원가요소코드
+  cst_dtl_nm       String    @default("") @db.VarChar(100) // 추가구분자
+  before_ver_amt   Decimal?  @db.Decimal // 이전버전 금액
+  now_ver_amt      Decimal?  @db.Decimal // 현재버전 금액
+  dfmn_amt         Decimal?  @db.Decimal // 차액 금액
+  dfmn_rsn         String?   @db.VarChar(400) // 차액 발생 사유
+  pl_rm            String?   @db.VarChar(400) // 비고
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, wbs_cd, ver, plan_ym, cst_ele_cd, cst_dtl_nm])
+  @@index([pjt_cd, ver, plan_ym])
+  @@index([pjt_cd, wbs_cd, ver, plan_ym])
+  @@map("pm_pjt_exe_profit")
+}
+
+// 결재중인 경우 손익실적 임시보관
+model pm_pjt_exe_profit_hold {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String    @db.VarChar(15) // WBS 코드
+  ver              Decimal   @db.Decimal // 실행계획버전
+  plan_lvl         Decimal?  @db.Decimal // 레벨
+  plan_ym          String    @db.VarChar(6) // 년월 (YYYYMM)
+  cst_ty_cd        String?   @db.VarChar(5) // 원가요소구분
+  cst_ele_cd       String    @db.VarChar(10) // 원가요소코드
+  up_cst_ele_cd    String?   @db.VarChar(30) // 상위원가요소코드
+  cst_dtl_nm       String    @default("") @db.VarChar(100) // 추가구분자
+  before_ver_amt   Decimal?  @db.Decimal // 이전버전 금액
+  now_ver_amt      Decimal?  @db.Decimal // 현재버전 금액
+  dfmn_amt         Decimal?  @db.Decimal // 차액 금액
+  dfmn_rsn         String?   @db.VarChar(400) // 차액 발생 사유
+  pl_rm            String?   @db.VarChar(400) // 비고
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, wbs_cd, ver, plan_ym, cst_ele_cd, cst_dtl_nm])
+  @@map("pm_pjt_exe_profit_hold")
+}
+
+// 월별 매출 실적
+model pm_revenue_cdit_rqst_rsl {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String    @db.VarChar(15) // wbscode
+  rsl_ym           String    @db.VarChar(6) // 실적년월 (YYYYMM)
+  sec_cst_ele_cd   String    @db.VarChar(10) // 원가요소코드
+  revenue_amt      Decimal?  @db.Decimal // 매출금액
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, wbs_cd, rsl_ym, sec_cst_ele_cd])
+  @@map("pm_revenue_cdit_rqst_rsl")
+}
+
+// 월매출계획
+model pm_revenue_plan {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  ver              Decimal   @db.Decimal // 실행계획버전
+  plan_ym          String    @db.VarChar(6) // 년월 (YYYYMM)
+  sec_cst_ele_cd   String    @db.VarChar(10) // 원가요소코드
+  wbs_cd           String    @db.VarChar(15) // WBS코드
+  revenue_amt      Decimal?  @db.Decimal // 매출금액
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, ver, plan_ym, sec_cst_ele_cd, wbs_cd])
+  @@map("pm_revenue_plan")
+}
+
+// 월별 WBS 매출계획
+model pm_revenue_plan_wbs {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  ver              Decimal   @db.Decimal // 실행계획버전
+  wbs_cd           String    @db.VarChar(15) // WBS 코드
+  plan_ym          String    @db.VarChar(6) // 년월 (YYYYMM)
+  revenue_amt      Decimal?  @db.Decimal // 매출금액
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  reason           String?   @db.VarChar(300) // 백업사유
+  // @@schema("proj")
+
+  @@id([pjt_cd, ver, wbs_cd, plan_ym])
+  @@map("pm_revenue_plan_wbs")
+}
+
+// 타임카드(프로젝트) 입력
+model pm_timecard {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String    @db.VarChar(15) // WBS Code
+  empno            String    @db.VarChar(10) // 사번
+  timecard_ym      String    @db.VarChar(6) // 실적년월 (YYYYMM)
+  work_time        Decimal?  @default(168) @db.Decimal // 근무시간
+  costct_cd        String?   @db.VarChar(10) // Cost Center 코드
+  dept_cd          String?   @db.VarChar(20) // 부서코드
+  work_date_1      Decimal?  @db.Decimal // 1
+  work_date_2      Decimal?  @db.Decimal // 2
+  work_date_3      Decimal?  @db.Decimal // 3
+  work_date_4      Decimal?  @db.Decimal // 4
+  work_date_5      Decimal?  @db.Decimal // 5
+  work_date_6      Decimal?  @db.Decimal // 6
+  work_date_7      Decimal?  @db.Decimal // 7
+  work_date_8      Decimal?  @db.Decimal // 8
+  work_date_9      Decimal?  @db.Decimal // 9
+  work_date_10     Decimal?  @db.Decimal // 10
+  work_date_11     Decimal?  @db.Decimal // 11
+  work_date_12     Decimal?  @db.Decimal // 12
+  work_date_13     Decimal?  @db.Decimal // 13
+  work_date_14     Decimal?  @db.Decimal // 14
+  work_date_15     Decimal?  @db.Decimal // 15
+  work_date_16     Decimal?  @db.Decimal // 16
+  work_date_17     Decimal?  @db.Decimal // 17
+  work_date_18     Decimal?  @db.Decimal // 18
+  work_date_19     Decimal?  @db.Decimal // 19
+  work_date_20     Decimal?  @db.Decimal // 20
+  work_date_21     Decimal?  @db.Decimal // 21
+  work_date_22     Decimal?  @db.Decimal // 22
+  work_date_23     Decimal?  @db.Decimal // 23
+  work_date_24     Decimal?  @db.Decimal // 24
+  work_date_25     Decimal?  @db.Decimal // 25
+  work_date_26     Decimal?  @db.Decimal // 26
+  work_date_27     Decimal?  @db.Decimal // 27
+  work_date_28     Decimal?  @db.Decimal // 28
+  work_date_29     Decimal?  @db.Decimal // 29
+  work_date_30     Decimal?  @db.Decimal // 30
+  work_date_31     Decimal?  @db.Decimal // 31
+  work_base_time   Decimal?  @db.Decimal // SAP interface 기준시간
+  wbs_cd2nd        String    @db.VarChar(15) // WBS Code 2nd
+  compt_dt         DateTime? @db.Timestamp(6) // 작성 완료 일시
+  type             String?   @db.Char(1) // 에러 유형
+  message          String?   @db.Char(220) // 메시지 텍스트
+  sap_if_ver       Decimal?  @default(1) @db.Decimal // SAP Interface 송신 버전
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, wbs_cd, empno, timecard_ym])
+  @@map("pm_timecard")
+}
+
+// 타임카드(지원) 비프로젝트 입력
+model pm_timecard_wait {
+  empno            String    @db.VarChar(10) // 사번
+  wait_cd          String    @db.VarChar(10) // 비가동 유형
+  timecard_ym      String    @db.VarChar(6) // 실적년월 (YYYYMM)
+  work_time        Decimal?  @db.Decimal // 근무시간
+  compt_dt         DateTime? @db.Timestamp(6) // 작성완료일시
+  costct_cd        String?   @db.VarChar(10) // Cost Center 코드
+  dept_cd          String?   @db.VarChar(20) // 부서코드
+  work_date_1      Decimal?  @db.Decimal // 1
+  work_date_2      Decimal?  @db.Decimal // 2
+  work_date_3      Decimal?  @db.Decimal // 3
+  work_date_4      Decimal?  @db.Decimal // 4
+  work_date_5      Decimal?  @db.Decimal // 5
+  work_date_6      Decimal?  @db.Decimal // 6
+  work_date_7      Decimal?  @db.Decimal // 7
+  work_date_8      Decimal?  @db.Decimal // 8
+  work_date_9      Decimal?  @db.Decimal // 9
+  work_date_10     Decimal?  @db.Decimal // 10
+  work_date_11     Decimal?  @db.Decimal // 11
+  work_date_12     Decimal?  @db.Decimal // 12
+  work_date_13     Decimal?  @db.Decimal // 13
+  work_date_14     Decimal?  @db.Decimal // 14
+  work_date_15     Decimal?  @db.Decimal // 15
+  work_date_16     Decimal?  @db.Decimal // 16
+  work_date_17     Decimal?  @db.Decimal // 17
+  work_date_18     Decimal?  @db.Decimal // 18
+  work_date_19     Decimal?  @db.Decimal // 19
+  work_date_20     Decimal?  @db.Decimal // 20
+  work_date_21     Decimal?  @db.Decimal // 21
+  work_date_22     Decimal?  @db.Decimal // 22
+  work_date_23     Decimal?  @db.Decimal // 23
+  work_date_24     Decimal?  @db.Decimal // 24
+  work_date_25     Decimal?  @db.Decimal // 25
+  work_date_26     Decimal?  @db.Decimal // 26
+  work_date_27     Decimal?  @db.Decimal // 27
+  work_date_28     Decimal?  @db.Decimal // 28
+  work_date_29     Decimal?  @db.Decimal // 29
+  work_date_30     Decimal?  @db.Decimal // 30
+  work_date_31     Decimal?  @db.Decimal // 31
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([empno, wait_cd, timecard_ym])
+  @@map("pm_timecard_wait")
+}
+
+// 임시직노무비계획
+model pm_tmplbr_lcst_plan {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  ver              Decimal   @db.Decimal // 실행계획버전
+  wbs_cd           String    @db.VarChar(15) // WBS Code
+  plan_ym          String    @db.VarChar(6) // 년월 (YYYYMM)
+  lcst_amt         Decimal?  @db.Decimal // 금액
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  // @@schema("proj")
+
+  @@id([pjt_cd, ver, wbs_cd, plan_ym])
+  @@map("pm_tmplbr_lcst_plan")
+}
+
+// 프로젝트 실행팀 및 매출액관리
+model pm_wbs_mst {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String    @db.VarChar(15) // WBS 코드
+  wbs_desc         String?   @db.VarChar(50) // WBS 내역
+  dept_cd          String?   @db.VarChar(20) // 부서 코드
+  costct_cd        String?   @db.VarChar(10) // C/C 코드
+  costct_ty_cd     String?   @db.VarChar(7) // C/C 구분 코드
+  revenue_amt      Decimal?  @default(0) @db.Decimal // 매출금액
+  sys_cd           String?   @db.VarChar(2) // 시스템 구분(PO:POM, BP:BPS, PM:PMS)
+  dtt_ty           String?   @db.VarChar(2) // 구분(01. 견적, 02. 계약, 03. 실행)
+  epld_end_yn      String?   @db.VarChar(1) // 조기종료여부
+  cost_able_yn     String?   @default("N") @db.VarChar(1) // WBS 원가처리가능 FLAG
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일
+  wbs_start_de     String?   @db.VarChar(8) // 수행기간시작일 (YYYYMMDD)
+  wbs_end_de       String?   @db.VarChar(8) // 수행기간종료일 (YYYYMMDD)
+  wbs_cust_no      String?   @db.VarChar(30) // 고객사번호
+  wbs_job          String?   @db.VarChar(500) // 수행업무
+  // @@schema("proj")
+
+  @@id([pjt_cd, wbs_cd])
+  @@map("pm_wbs_mst")
+}
+
+// 월 근무 시간
+model pm_work_time {
+  work_yy          String    @db.VarChar(4) // 년도
+  work_mm          String    @db.VarChar(2) // 월
+  work_time        Decimal?  @default(168) @db.Decimal // 근무시간
+  work_dcnt        Int? // 월 작업일수
+  use_yn           String    @db.VarChar(1) // 사용여부
+  regr_emp_no      String? // 등록자직원번호
+  reg_dttm         DateTime? @db.Timestamp(6) // 등록일시
+  updr_emp_no      String? // 수정자직원번호
+  upd_dttm         DateTime? @db.Timestamp(6) // 수정일시
+  lst_upt_pgm_no   Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @default(0) @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @default(now()) @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id   Decimal?  @default(0) @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @default(now()) @db.Timestamp(6) // 최종수정일자
+  // @@schema("proj")
+
+  @@id([work_yy, work_mm])
+  @@map("pm_work_time")
+}
+
+// 프로젝트 계약 자료 메인
+model po_contract {
+  pjt_cd                    String    @id @db.VarChar(15) // 프로젝트 코드
+  contract_no               String?   @db.VarChar(120) // 계약 번호
+  cash_per                  Decimal?  @db.Decimal // 현금 율
+  bill_per                  Decimal?  @db.Decimal // 어음 율
+  vat_contract_type         String?   @db.VarChar(1) // VAT 포함 여부
+  won_amt                   Decimal?  @db.Decimal // 원화 계약 금액
+  won_vat                   Decimal?  @db.Decimal // 원화 VAT 금액
+  fc_amt                    Decimal?  @db.Decimal // 외자 계약 금액
+  fc_uom                    String?   @db.VarChar(10) // 외자 단위
+  ex_rate                   Decimal?  @db.Decimal // 환율
+  dept_id                   String?   @db.VarChar(10) // 계약 부서 ID
+  dept_cd                   String?   @db.VarChar(8) // 계약 부서 코드
+  description               String?   @db.VarChar(240) // 계약 부서 명
+  bill_day                  Decimal?  @db.Decimal // 어음 기간
+  refund_rate               Decimal?  @db.Decimal // 선수금 율
+  person_id                 String?   @db.VarChar(10) // 계약 담당자 ID
+  person_cd                 String?   @db.VarChar(10) // 계약 담당자 CODE
+  person_nm                 String?   @db.VarChar(20) // 계약 담당자 명
+  phone_no                  String?   @db.VarChar(300) // 전화번호
+  start_de                  String?   @db.VarChar(8) // FROM_계약일 (YYYYMMDD)
+  end_de                    String?   @db.VarChar(8) // TO_계약일 (YYYYMMDD)
+  contract_de               String?   @db.VarChar(8) // 계약일자 (YYYYMMDD)
+  contract_type             String?   @db.VarChar(10) // 계약구분
+  order_de                  String?   @db.VarChar(8) // 수주 일자 (YYYYMMDD)
+  contract_impression       String?   @db.VarChar(15) // 계약 인감
+  commodity                 Decimal?  @db.Decimal // 확정매출액
+  approver_id               String?   @db.VarChar(10) // 승인자 ID
+  collect_condition_desc    String?   @db.VarChar(1500) // 수금조건 비고
+  contract_boundary         String?   @db.VarChar(1500) // 계약범위조건
+  strategic_effect          String?   @db.VarChar(1500) // 전략적효과
+  agreement_and_issue       String?   @db.VarChar(1500) // 이슈사항
+  approval_yn               String?   @db.VarChar(1) // 승인 여부
+  approval_comment          String?   @db.VarChar(1500) // 승인 반려 내용
+  doc_submit_de             String?   @db.VarChar(8) // 수주 계약 제출일 (YYYYMMDD)
+  doc_submit_id             String?   @db.VarChar(10) // 수주 관리 번호
+  approve_req_de            String?   @db.VarChar(12) // 승인 요청일
+  funding_de                String?   @db.VarChar(8) // FUNDING 일 (YYYYMMDD)
+  approve_de                String?   @db.VarChar(12) // 승인일
+  foreign_yn                String?   @db.VarChar(1) // 외화여부
+  foreign_commodity         Decimal?  @db.Decimal // 외화 확정매출
+  appr_m                    String?   @db.VarChar(1) // 모바일 승인여부
+  subcontract_res_yn        String?   @db.VarChar(1) // 하자보수 의무여부
+  insurance_res_yn          String?   @db.VarChar(1) // 고용/산재보험 가입 여부
+  nsc_yn                    String?   @db.VarChar(1) // NSC 계약 여부
+  flaw_py_cont_yn           String?   @db.VarChar(1) // 하자보수 계약여부(사용안함)
+  aibd_biz_yn               String?   @db.VarChar(1) // AI/BigData사업여부
+  ctr_suju_yn               String?   @db.VarChar(1) // 기여수주여부
+  ctr_suju_amt_won          Decimal?  @db.Decimal // 기여수주금액(원화)
+  ctr_suju_amt_fc           Decimal?  @db.Decimal // 기여수주금액(외화)
+  funding_amt               Decimal?  @db.Decimal // funding금액
+  approval_id               Decimal?  @db.Decimal // 결재ID
+  approval_sts_cd           String?   @db.VarChar(60) // 결재상태코드 (공통코드 CM080)
+  atchmnfl_grp_no           Decimal?  @db.Decimal // 첨부파일그룹번호
+  est_ver                   String?   @db.VarChar(5) // 승인요청 당시 견적버전
+  funding_yn                String?   @db.VarChar(1) // 펀딩 여부
+  deposit_rate              Decimal?  @db.Decimal(10, 2) // 보증금율(%)
+  refund_amt                Decimal?  @db.Decimal // 선수금
+  interim_amt               Decimal?  @db.Decimal // 중도금
+  remainder_amt             Decimal?  @db.Decimal // 잔금
+  cal_period                String?   @db.VarChar(10) // 정산주기
+  retard_rate               Decimal?  @db.Decimal(10, 4) // 지체상금율(%)
+  hole_rate                 Decimal?  @db.Decimal(10, 4) // 성능유보금비율(%)
+  long_nm                   String?   @db.VarChar(240) // 발주처 계약명
+  lst_upt_pgm_no            Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id          String?   @db.VarChar(30) // 최초생성사원아이디
+  fst_creat_de              DateTime? @default(now()) @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id            String?   @db.VarChar(30) // 최종수정사원아이디
+  lst_upt_de                DateTime? @default(now()) @db.Timestamp(6) // 최종수정일자
+  approval_first_yn         String?   @default("N") @db.VarChar(1) // 1차결재자 승인여부
+  approval_first_req_yn     String?   @default("N") @db.VarChar(1) // 1차결재자 승인 요청 여부
+  approval_first_approve_dt DateTime? @db.Timestamp(6) // 1차결재자 승인 일시
+  approval_first_empno      String?   @db.VarChar(20) // 1차결재자 사원번호
+  approval_first_yn_comment String?   @db.VarChar(1500) // 1차결재자 승인/반려 내용
+  approval_first_req_empno  String?   @db.VarChar(20) // 1차결재자 승인 요청자 사원번호
+  approval_first_req_dt     DateTime? @db.Timestamp(6) // 1차결재자 승인 요청 일시
+  subcont_perf_sett         String?   @db.VarChar(2) // 하도급실적 정산
+  fst_approval_id           Decimal?  @db.Decimal // 수주인식(1차결재) 결재번호
+  fst_approval_sts_cd       String?   @db.VarChar(60) // 수주인식(1차결재) 결재상태
+  inv_dp_yn                 String?   @db.VarChar(30) // 설계/생산 관여 여부
+  // @@schema("proj")
+
+  @@map("po_contract")
+}
+
+// 프로젝트 계약 자료 변경
+model po_contract_chg {
+  pjt_cd                    String    @db.VarChar(15) // 프로젝트 코드
+  contract_no               String    @db.VarChar(120) // 계약번호
+  contract_de               String    @db.VarChar(8) // 계약변경일 (YYYYMMDD)
+  seq_no                    Decimal   @db.Decimal // 변경순번
+  won_amt                   Decimal?  @db.Decimal // 변경된 원화계약금액
+  won_vat                   Decimal?  @db.Decimal // 원화 VAT 금액
+  fc_amt                    Decimal?  @db.Decimal // 외자 계약 금액
+  ex_rate                   Decimal?  @db.Decimal // 환율
+  start_de                  String?   @db.VarChar(8) // FROM_계약일 (YYYYMMDD)
+  end_de                    String?   @db.VarChar(8) // TO_계약일 (YYYYMMDD)
+  note                      String?   @db.VarChar(2000) // 비고
+  gagam_check               String?   @db.VarChar(1) // 가감 여부
+  vat_contract_type         String?   @db.VarChar(10) // VAT 구분
+  commodity                 Decimal?  @db.Decimal // 확정매출액
+  approver_id               String?   @db.VarChar(10) // 승인자 ID
+  approval_yn               String?   @db.VarChar(1) // 승인여부
+  approval_comment          String?   @db.VarChar(1500) // 승인 반려 내용
+  approve_req_de            String?   @db.VarChar(12) // 승인 요청 일
+  funding_de                String?   @db.VarChar(8) // FUNDING 일
+  approve_de                String?   @db.VarChar(12) // 승인 일
+  foreign_commodity         Decimal?  @db.Decimal // 외화 확정매출
+  dept_id_ch                String?   @db.VarChar(10) // 부서 코드 변경
+  appr_m                    String?   @db.VarChar(1) // 모바일 승인여부
+  aibd_biz_yn               String?   @db.VarChar(1) // AI/BigData사업여부
+  foreign_yn                String?   @db.VarChar(60) // 외화여부
+  ctr_suju_yn               String?   @db.VarChar(1) // 기여수주여부
+  ctr_suju_amt_won          Decimal?  @db.Decimal // 기여수주금액(원화)
+  ctr_suju_amt_fc           Decimal?  @db.Decimal // 기여수주금액(외화)
+  funding_amt               Decimal?  @db.Decimal // funding금액
+  approval_id               Decimal?  @db.Decimal // 결재ID
+  approval_sts_cd           String?   @db.VarChar(60) // 결재상태코드 (공통코드 CM080)
+  atchmnfl_grp_no           Decimal?  @db.Decimal // 첨부파일그룹번호
+  est_ver                   String?   @db.VarChar(5) // 승인요청 당시 견적버전
+  funding_yn                String?   @db.VarChar(1) // 펀딩 여부
+  deposit_rate              Decimal?  @db.Decimal(10, 2) // 보증금율(%)
+  lst_upt_pgm_no            Decimal?  @default(0) @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id          String?   @db.VarChar(30) // 최초생성사원아이디
+  fst_creat_de              DateTime? @default(now()) @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id            String?   @db.VarChar(30) // 최종수정사원아이디
+  lst_upt_de                DateTime? @default(now()) @db.Timestamp(6) // 최종수정일자
+  add_order_de              String?   @db.VarChar(8) // 추가 수주일 (YYYYMMDD)
+  approval_first_yn         String?   @default("N") @db.VarChar(1) // 1차결재자 승인여부
+  approval_first_req_yn     String?   @default("N") @db.VarChar(1) // 1차결재자 승인 요청 여부
+  approval_first_approve_dt DateTime? @db.Timestamp(6) // 1차결재자 승인 일시
+  approval_first_empno      String?   @db.VarChar(20) // 1차결재자 사원번호
+  approval_first_yn_comment String?   @db.VarChar(1500) // 1차결재자 승인/반려 내용
+  approval_first_req_empno  String?   @db.VarChar(20) // 1차결재자 승인 요청자 사원번호
+  approval_first_req_dt     DateTime? @db.Timestamp(6) // 1차결재자 승인 요청 일시
+  fst_approval_id           Decimal?  @db.Decimal // 수주인식(1차결재) 결재번호
+  fst_approval_sts_cd       String?   @db.VarChar(60) // 수주인식(1차결재) 결재상태
+  // @@schema("proj")
+
+  @@id([pjt_cd, contract_no, seq_no])
+  @@map("po_contract_chg")
+}
+
+// 고객사 사업장
+model po_cust_sites {
+  cust_seq              String    @db.VarChar(10) // 고객사 SEQ
+  cust_site_seq         String    @db.VarChar(10) // 사업장 SEQ
+  brl_site_no           String?   @db.VarChar(50) // 사업자등록번호
+  brl_site_no_auto_flag String?   @db.Char(1) // 사업자등록번호 자동생성여부
+  brl_site_nm           String    @db.VarChar(120) // 사업장명
+  cust_type_cd          String?   @db.VarChar(1) // 고객구분(1:기업, 2:개인)
+  brl_site_rep_nm       String?   @db.VarChar(45) // 대표자명
+  brl_site_rep_ssn      String?   @db.VarChar(45) // 대표자주민번호
+  brl_site_rep_email    String?   @db.VarChar(45) // 대표자이메일
+  site_phone_no         String?   @db.VarChar(45) // 대표전화번호
+  site_fax              String?   @db.VarChar(45) // 대표팩스번호
+  site_addr1            String?   @db.VarChar(150) // 사업장주소1
+  site_addr2            String?   @db.VarChar(150) // 사업장주소2
+  site_valid            String?   @db.Char(1) // 사업장유효여부
+  zip_cd                String?   @db.VarChar(11) // 우편번호
+  zip_seq               String?   @db.Char(5) // 우편번호 일련번호
+  biz_con_cd            String?   @db.VarChar(120) // 사업자등록증업태
+  biz_item              String?   @db.VarChar(225) // 사업자등록증종목
+  primary_flag          String?   @db.Char(1) // 본사여부
+  brl_site_alt          String?   @db.VarChar(120) // POM 조회명
+  country_cd            String?   @db.VarChar(2) // 국가코드
+  terms_id              String?   @db.VarChar(10) // 지급방법
+  pay_grp_lookup_cd     String?   @db.VarChar(30) // 지급Group
+  invoice_currency_cd   String?   @db.VarChar(15) // Invoice화폐코드
+  payment_currency_cd   String?   @db.VarChar(15) // Payment화폐코드
+  payment_term_id       Decimal?  @db.Decimal(22, 0) // 수금구분
+  tax_ar_email          String?   @db.VarChar(40) // 거래처 전자세금계산서 E-AMIL
+  tax_ar_sms            String?   @db.VarChar(30) // 거래쳐 전자세금계산서 SMS
+  tax_ar_pub_type       String?   @db.VarChar(10) // 거래쳐 전자세금계산서 정/역발행 구분
+  tax_ap_email          String?   @db.VarChar(40) // 공급사 전자세금계산서 E-AMIL
+  tax_ap_sms            String?   @db.VarChar(30) // 공급사 전자세금계산서 SMS
+  tax_ap_pub_type       String?   @db.VarChar(10) // 공급사 전자세금계산서 정/역발행 구분
+  tax_type              String?   @db.Char(1) // 원천세 구분
+  tax_type_grp          String?   @db.VarChar(20) // 원천세 그룹
+  account_bank          Decimal?  @db.Decimal(22, 0) // 계좌은행
+  account_no            String?   @db.VarChar(30) // 계좌번호
+  add_info              String?   @db.VarChar(30) // 추가정보분류
+  tax_attribute1        String?   @db.VarChar(30) // 전자세금계산1
+  tax_attribute2        String?   @db.VarChar(30) // 전자세금계산2
+  tax_attribute3        String?   @db.VarChar(30) // 전자세금계산3
+  tax_attribute4        String?   @db.VarChar(30) // 전자세금계산4
+  tax_attribute5        String?   @db.VarChar(30) // 전자세금계산5
+  attr1                 String?   @db.VarChar(30) // 가맹점번호
+  attr2                 String?   @db.VarChar(30) // 구 포스데이타 사업장SEQ
+  attr3                 String?   @db.VarChar(30) // 추가항목 3
+  attr4                 String?   @db.VarChar(30) // 추가항목 4
+  attr5                 String?   @db.VarChar(30) // 추가항목 5
+  bill_per              String?   @db.VarChar(10) // 어음비율(%)
+  cash_per              String?   @db.VarChar(150) // 현금비율(%)
+  terms_day             String?   @db.VarChar(150) // Terms(일)
+  bill_term             String?   @db.VarChar(150) // 어음만기(일)
+  end_yn                String?   @db.VarChar(1) // 종료처리여부 Y:종료  N:사용중
+  end_de                DateTime? @db.Timestamp(6) // 종료처리일자
+  acc_flag              String?   @db.VarChar(1) // 계좌등록 필수해제(Y/N)(해당테이블사용 x)
+  sys_input_cd          String?   @db.VarChar(1) // 시스템입력코드(1:수주, 2:구매, 3:SAP)
+  setup_de              String?   @db.VarChar(8) // 사업장 개설일 (YYYYMMDD)
+  atchmnfl_grp_no       Decimal?  @db.Decimal // 첨부파일 그룹번호
+  lst_upt_pgm_no        Decimal?  @default(0) @db.Decimal // 최종프로그램번호
+  fst_creat_emp_id      String?   @db.VarChar(30) // 최초생성사원아이디
+  fst_creat_de          DateTime? @default(now()) @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id        String?   @db.VarChar(30) // 최종수정사원아이디
+  lst_upt_de            DateTime? @default(now()) @db.Timestamp(6) // 최종수정일자
+  empfk                 String?   @db.VarChar(10) // 대체수취인 (비즈니스 파트너 번호)
+  co_manage_type_cd     String?   @db.VarChar(30) // 휴폐업 구분
+  co_manage_reason      String?   @db.VarChar(30) // 휴폐업 해제 사유
+  // @@schema("proj")
+
+  @@id([cust_seq, cust_site_seq])
+  @@index([cust_site_seq])
+  @@map("po_cust_sites")
+}
+
+// 프로젝트 마스터
+model po_pjt_plan {
+  pjt_cd                                String    @id @db.VarChar(15) // 프로젝트코드
+  pjt_nm                                String?   @db.VarChar(100) // 프로젝트명
+  pjt_type_id                           String?   @db.VarChar(10) // 프로젝트Type (공통코드 PO011)
+  long_nm                               String?   @db.VarChar(500) // 발주처계약명
+  biz_contents                          String?   @db.VarChar(1500) // 주요사업내용
+  country_cd                            String?   @db.VarChar(10) // 국가코드
+  abrd_ntn_nm                           String?   @db.VarChar(50) // 국외국가명
+  element_cd                            String?   @db.VarChar(30) // 기술요소코드
+  pbs_big_type_cd                       String?   @db.VarChar(30) // PBS 대분류코드
+  pbs_middle_type_cd                    String?   @db.VarChar(30) // PBS 중분류코드
+  pbs_small_type_cd                     String?   @db.VarChar(30) // PBS 소분류코드
+  rnd_plan_cd                           String?   @db.VarChar(30) // pbs계획코드(R&D)
+  dms_abrd_dtt                          String?   @db.VarChar(50) // 국내/국외 구분
+  ori_cust_no                           String?   @db.VarChar(30) // 원발주처고객사번호
+  cust_no                               String?   @db.VarChar(30) // 고객사번호
+  biz_org_id                            Decimal?  @db.Decimal // 영업사업부문ID
+  biz_grp_id                            Decimal?  @db.Decimal // 영업실ID
+  biz_team_id                           Decimal?  @db.Decimal // 영업팀ID
+  biz_person_id                         String?   @db.VarChar(10) // 영업사원번호
+  quote_req_person_id                   String?   @db.VarChar(10) // 견적산출요청자사번
+  estimate_person_dept_id               Decimal?  @db.Decimal // 견적부서Id
+  estimate_person_id                    String?   @db.VarChar(10) // 견적담당자사번
+  quote_req_de                          String?   @db.VarChar(8) // 견적산출요청일자 (YYYYMMDD)
+  pm_bumun_id                           Decimal?  @db.Decimal // 실행부문ID
+  pm_sil_id                             Decimal?  @db.Decimal // 실행실ID
+  pm_team_id                            Decimal?  @db.Decimal // 실행팀ID
+  carrying_out_team_id                  String?   @db.VarChar(30) // 실행팀C/C
+  carrying_out_person_id                String?   @db.VarChar(10) // 실행PM사번
+  biz_sts_cd                            String?   @db.VarChar(10) // 영업진행상태코드 (공통코드 PO002)
+  sales_start_de                        String?   @db.VarChar(8) // 영업시작일 (YYYYMMDD)
+  sales_end_de                          String?   @db.VarChar(8) // 영업종료일 (YYYYMMDD)
+  order_de                              String?   @db.VarChar(8) // 수주일 (YYYYMMDD)
+  contract_date                         String?   @db.VarChar(8) // 계약일 (YYYYMMDD)
+  start_de                              String?   @db.VarChar(8) // 계약공기시작일 (YYYYMMDD)
+  end_de                                String?   @db.VarChar(8) // 계약공기종료일 (YYYYMMDD)
+  cust_bgt_amt                          Decimal?  @db.Decimal // 고객예산
+  investment_amt                        Decimal?  @db.Decimal // 투자예산
+  order_amt                             Decimal?  @db.Decimal // 수주예상금액
+  process_type                          String?   @db.VarChar(1) // 수주심의대상여부
+  process_de                            String?   @db.VarChar(8) // 수주심의예상일 (YYYYMMDD)
+  approver_id                           String?   @db.VarChar(10) // 영업기회등록승인자사번
+  approval_yn                           String?   @db.VarChar(1) // 영업기회등록승인여부
+  approval_comment                      String?   @db.VarChar(1500) // 영업기회등록승인자의견
+  approve_req_de                        String?   @db.VarChar(12) // 영업기회등록승인요청일시
+  decision                              String?   @db.VarChar(10) // 내용
+  plan_type                             String?   @db.VarChar(10) // 어카운트플랜계획여부
+  plan_nm                               String?   @db.VarChar(150) // 어카운트플랜과제명
+  pjt_type_sub                          String?   @db.VarChar(3) // 프로젝트 Sub Type
+  suju_type_cd                          String?   @db.VarChar(20) // 전략수주Type
+  strategy_yn                           String?   @db.VarChar(1) // 전략수주Type여부
+  biz_type2                             String?   @db.VarChar(10) // 사업분류2
+  biz_type3                             String?   @db.VarChar(10) // 사업분류3
+  proposal_org_cd                       String?   @db.VarChar(10) // 발의조직CC
+  apscheduled_de                        String?   @db.VarChar(50) // 사전영업평가예정일
+  opportunity_grade                     Decimal?  @db.Decimal // 기회성숙도
+  possibility_note                      String?   @db.VarChar(500) // 수주가능성변경사유
+  suju_score                            Decimal?  @db.Decimal // 수주가능성점수
+  biz_chk                               String?   @db.VarChar(1) // 수주가능여부
+  intimacy_score                        Decimal?  @db.Decimal // 수주가능성-고객친밀도
+  price_score                           Decimal?  @db.Decimal // 수주가능성-가격경쟁력
+  competition_score                     Decimal?  @db.Decimal // 수주가능성-경쟁도
+  capability_score                      Decimal?  @db.Decimal // 수주가능성-실적/역량
+  drop_de                               String?   @db.VarChar(8) // Drop일자 (YYYYMMDD)
+  drop_note                             String?   @db.VarChar(500) // Drop내역
+  drop_reason                           String?   @db.VarChar(500) // Drop사유
+  prospect_yn                           String?   @db.VarChar(1) // 매출전망반영여부
+  target_profit_type                    String?   @db.VarChar(50) // 목표이익률Type
+  target_profit                         Decimal?  @db.Decimal // 목표이익률
+  tp_gap_reason                         String?   @db.VarChar(500) // 목표이익률Gap사유
+  poten_sales_chk                       String?   @db.VarChar(1) // 잠재영업기회등록여부
+  invm_plan_cd                          String?   @db.VarChar(30) // bps계획코드(투자)
+  invm_ty_cd                            String?   @db.VarChar(30) // 투자유형
+  invm_charger_id                       Decimal?  @db.Decimal // 투자담당자 ID
+  nsc_yn                                String?   @db.VarChar(1) // NSC계약여부
+  aibd_biz_yn                           String?   @db.VarChar(1) // AI/BigData사업여부
+  safety_health_yn                      String?   @db.VarChar(1) // 안전보건작성여부
+  cust_satis_excp_rsn                   String?   @db.VarChar(1000) // 고객만족 예외 사유
+  fnding_won_amt                        Decimal?  @db.Decimal // 펀딩원화금액
+  fnding_fc_amt                         Decimal?  @db.Decimal // 펀딩외자금액
+  fnding_fc_uom                         String?   @db.VarChar(10) // 펀딩외자단위
+  fnding_ex_rate                        Decimal?  @db.Decimal // 펀딩환율
+  cont_won_amt                          Decimal?  @db.Decimal // 원화계약금액
+  cont_fc_amt                           Decimal?  @db.Decimal // 외자계약금액
+  cont_fc_uom                           String?   @db.VarChar(10) // 외자계약단위
+  cont_ex_rate                          Decimal?  @db.Decimal // 계약 환율
+  cnfm_sts_cd                           String?   @db.VarChar(2) // 비매출PJT상태 (10, 20, 50, W)
+  approval_id                           Decimal?  @db.Decimal // 결제요청번호
+  appr_m                                String?   @db.VarChar(3) // 모바일 승인여부
+  system_sts_cd                         String?   @db.VarChar(10) // 프로젝트상태코드 (공통코드 PM003)
+  exe_begin_date                        String?   @db.VarChar(8) // 실행공기시작일 (YYYYMMDD)
+  exe_end_date                          String?   @db.VarChar(8) // 실행공기종료일 (YYYYMMDD)
+  pjt_fst_app_date                      String?   @db.VarChar(8) // 프로젝트최초품의일 (YYYYMMDD)
+  pjt_compt_date                        String?   @db.VarChar(8) // 프로젝트완료일 (YYYYMMDD)
+  pjt_close_date                        String?   @db.VarChar(8) // 프로젝트종료일 (YYYYMMDD)
+  big_mtl_ym                            String?   @db.VarChar(6) // 과대재료비발생년월
+  exe_plan_ver                          Decimal?  @db.Decimal // 프로젝트 실행 버젼
+  boq_ver                               String?   @db.VarChar(5) // BOQ Version
+  po_boq_lvl                            Decimal?  @db.Decimal // 견적 BOQ Level
+  pm_boq_lvl                            Decimal?  @db.Decimal // 실행 BOQ Level
+  ori_pjt_cd                            String?   @db.VarChar(15) // 원프로젝트코드
+  as_rec_de                             String?   @db.VarChar(8) // A/S 접수일자 (YYYYMMDD)
+  as_end_bfe_rsn                        String?   @db.VarChar(1500) // 원프로젝트종료전 A/S 사유
+  as_reg_empno                          String?   @db.VarChar(10) // A/S등록사번
+  flaw_grn_amt                          Decimal?  @db.Decimal // 하자보증금
+  ito_sts_cd                            String?   @db.VarChar(60) // 포스코ITO단계
+  ito_sts_desc                          String?   @db.VarChar(500) // 포스코ITO단계 내용
+  self_asgmt_yn                         String?   @db.VarChar(1) // 자체과제
+  self_asgmt_amt                        Decimal?  @db.Decimal // 자체과제 총 개발금액
+  new_tech_research_asgmt_yn            String?   @db.VarChar(1) // 신기술 연구조합 과제
+  new_tech_research_asgmt_amt           Decimal?  @db.Decimal // 신기술 연구조합 과제 총 개발금액
+  new_tech_research_asgmt_contract_amt  Decimal?  @db.Decimal // 협약금액
+  new_tech_research_asgmt_share_expense Decimal?  @db.Decimal // 분담금(당사분)
+  new_tech_research_asgmt_payment       Decimal?  @db.Decimal // 지급금(당사분)
+  govn_asgmt_yn                         String?   @db.VarChar(1) // 국책과제여부
+  govn_asgmt_amt                        Decimal?  @db.Decimal // 국책과제 총 개발금액
+  govn_asgn_donation                    Decimal?  @db.Decimal // 정부출연금
+  corp_share_expense_cash_amt           Decimal?  @db.Decimal // 기업분담금(현금)
+  corp_share_expense_goods_amt          Decimal?  @db.Decimal // 기업분담금(현물)
+  pre_exe_yn                            String?   @db.VarChar(1) // 선실행사업여부
+  svc_biz_yn                            String?   @db.VarChar(1) // 서비스사업여부
+  exe_plan_fst_ver                      String?   @db.VarChar(15) // 실행계획 최초 버전
+  proposal_org_id                       Decimal?  @db.Decimal // 발주부서 ID
+  fin_warranty_yn                       String?   @db.VarChar(1) // 채무 보증 여부
+  env_affc_evl_yn                       String?   @db.VarChar(1) // 환경영향평가(해당없음 N, 해당있음 Y)
+  dev_con_property_yn                   String?   @db.VarChar(1) // 개발비/건설중인 자산여부(해당없음 N, 해당있음 Y)
+  pm_auth_yn                            String?   @db.VarChar(1) // PM수정권한유무
+  lst_upt_pgm_no                        Decimal?  @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id                      Decimal?  @db.Decimal // 최초생성사원아이디
+  fst_creat_dt                          DateTime? @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id                        Decimal?  @db.Decimal // 최종수정사원아이디
+  lst_upt_dt                            DateTime? @db.Timestamp(6) // 최종수정일자
+  sla_biz_yn                            String?   @db.VarChar(1) // SLA 사업여부
+  subcontracting_order_review           String?   @db.VarChar(1) // 하도급 발주심의
+  strategy_biz_cd                       String?   @db.VarChar(10) // DX신사업(PO140)
+  bs_yn                                 String?   @db.VarChar(1) // BS과제 여부
+  priority_mng_yn                       String?   @db.VarChar(1) // 중점관리대상
+  priority_mng_de                       String?   @db.VarChar(8) // 중점관리대상 진입일자 (YYYYMMDD)
+  // @@schema("proj")
+
+  @@map("po_pjt_plan")
+}
+
+// 수주영업 월별 계획 data 관리
+model po_plan_mth_mgt {
+  pjt_cd              String    @db.VarChar(15) // 프로젝트코드
+  plan_ver            Decimal   @db.Decimal // 계획 버전
+  wbs_cd              String    @db.VarChar(15) // WBS 코드
+  carrying_out_org_id Decimal   @db.Decimal(22, 0) // 실행부서 HR코드
+  acct_dtt            String // 계정구분(공통코드(pm039)에 등록되어 있는 2차원가 계정)
+  ver                 Decimal?  @db.Decimal // plan his의 버전
+  start_year          String?   @db.VarChar(4) // 시작년도
+  m1                  Decimal?  @db.Decimal // month1
+  m2                  Decimal?  @db.Decimal // month2
+  m3                  Decimal?  @db.Decimal // month3
+  m4                  Decimal?  @db.Decimal // month4
+  m5                  Decimal?  @db.Decimal // month5
+  m6                  Decimal?  @db.Decimal // month6
+  m7                  Decimal?  @db.Decimal // month7
+  m8                  Decimal?  @db.Decimal // month8
+  m9                  Decimal?  @db.Decimal // month9
+  m10                 Decimal?  @db.Decimal // month10
+  m11                 Decimal?  @db.Decimal // month11
+  m12                 Decimal?  @db.Decimal // month12
+  m13                 Decimal?  @db.Decimal // month13
+  m14                 Decimal?  @db.Decimal // month14
+  m15                 Decimal?  @db.Decimal // month15
+  m16                 Decimal?  @db.Decimal // month16
+  m17                 Decimal?  @db.Decimal // month17
+  m18                 Decimal?  @db.Decimal // month18
+  m19                 Decimal?  @db.Decimal // month19
+  m20                 Decimal?  @db.Decimal // month20
+  m21                 Decimal?  @db.Decimal // month21
+  m22                 Decimal?  @db.Decimal // month22
+  m23                 Decimal?  @db.Decimal // month23
+  m24                 Decimal?  @db.Decimal // month24
+  carry_amt           Decimal?  @db.Decimal // 이월액
+  approval_id         Decimal?  @db.Decimal // 결재ID
+  approval_sts_cd     String?   @db.VarChar(60) // 결재상태코드 (공통코드 CM080)
+  lst_upt_pgm_no      Decimal?  @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id    Decimal?  @db.Decimal // 최초생성사원아이디
+  fst_creat_dt        DateTime? @default(now()) @db.Timestamp(6) // 최초생성일자
+  lst_upt_emp_id      Decimal?  @db.Decimal // 최종수정사원아이디
+  lst_upt_dt          DateTime? @default(now()) @db.Timestamp(6) // 최종수정일자
+  bgt_yy              String?   @db.VarChar(4) // 예산년도
+  bgt_class_cd        String?   @db.VarChar(7) // 예산분류
+  bgt_if_dt           DateTime? @db.Timestamp(6) // 예산 인터페이스 일시
+  // @@schema("proj")
+
+  @@id([pjt_cd, plan_ver, wbs_cd, acct_dtt])
+  @@map("po_plan_mth_mgt")
+}
+
+// MM Hold 실적포함 조회 view
+view pm_dclz_plan_hv {
+  pjt_cd      String   @db.VarChar(15) // 프로젝트코드
+  ver         Decimal  @db.Decimal // 실행계획버전
+  wbs_cd      String   @db.VarChar(15) // WBS Code
+  plan_ym     String   @db.VarChar(6) // 년월 (YYYYMM)
+  empno       String   @db.VarChar(10) // 사원번호
+  man_month   Decimal? @db.Decimal // M/M
+  lbr_amt     Decimal? @db.Decimal // 노무비
+  lbr_exp_amt Decimal? @db.Decimal // 인건비성 경비
+  gb          String // 구분
+  // @@schema("proj")
+
+  @@map("pm_dclz_plan_hv")
+}
+
+// 결재중 미반영 손익포함 손익 view
+view pm_pjt_exe_profit_hv {
+  pjt_cd           String    @db.VarChar(15) // 프로젝트코드
+  wbs_cd           String    @db.VarChar(15) // WBS 코드
+  ver              Decimal   @db.Decimal // 실행계획버전
+  plan_lvl         Decimal?  @db.Decimal // 레벨
+  plan_ym          String    @db.VarChar(6) // 년월 (YYYYMM)
+  cst_ty_cd        String?   @db.VarChar(5) // 원가요소구분
+  cst_ele_cd       String    @db.VarChar(10) // 원가요소코드
+  up_cst_ele_cd    String?   @db.VarChar(30) // 상위원가요소코드
+  cst_dtl_nm       String    @db.VarChar(100) // 추가구분자
+  before_ver_amt   Decimal?  @db.Decimal // 이전버전 금액
+  now_ver_amt      Decimal?  @db.Decimal // 현재버전 금액
+  dfmn_amt         Decimal?  @db.Decimal // 차액 금액
+  dfmn_rsn         String?   @db.VarChar(400) // 차액 발생 사유
+  pl_rm            String?   @db.VarChar(400) // 비고
+  attr1            String?   @db.VarChar(250) // 여분1
+  attr2            String?   @db.VarChar(250) // 여분2
+  attr3            String?   @db.VarChar(250) // 여분3
+  attr4            String?   @db.VarChar(250) // 여분4
+  attr5            String?   @db.VarChar(250) // 여분5
+  attr6            String?   @db.VarChar(250) // 여분6
+  attr7            String?   @db.VarChar(250) // 여분7
+  attr8            Decimal?  @db.Decimal // 여분8
+  attr9            Decimal?  @db.Decimal // 여분9
+  attr10           Decimal?  @db.Decimal // 여분10
+  lst_upt_pgm_no   Decimal?  @db.Decimal // 최종수정프로그램번호
+  fst_creat_emp_id Decimal?  @db.Decimal // 최초생성사원아이디
+  fst_creat_dt     DateTime? @db.Timestamp(6) // 최초생성일
+  lst_upt_emp_id   Decimal?  @db.Decimal // 최종수정사원아이디
+  lst_upt_dt       DateTime? @db.Timestamp(6) // 최종수정일
+  gb               String // 구분
+  // @@schema("proj")
+
+  @@map("pm_pjt_exe_profit_hv")
+}
+
+// 최초계약 손익 view
+view po_cont_est_profit_fst_v {
+  pjt_cd            String   @db.VarChar(15) // 프로젝트코드
+  wbs_cd            String   @db.VarChar(15) // WBS 코드
+  est_ver           Decimal? @db.Decimal // 견적버전
+  po_f_rev_amt      Decimal? @db.Decimal // 최초 매출액
+  po_f_mcost_amt    Decimal? @db.Decimal // 최초 재료비
+  po_f_hcost_amt    Decimal? @db.Decimal // 최초 공통비
+  po_f_lcost_amt    Decimal? @db.Decimal // 최초 노무비
+  po_f_mm_amt       Decimal? @db.Decimal // 최초 M/M
+  po_f_ecost_amt    Decimal? @db.Decimal // 최초 경비
+  po_f_rev_d_prof   Decimal? @db.Decimal // 최초 매출원가차이
+  po_f_etc_amt      Decimal? @db.Decimal // 최초 기타
+  po_f_prebiz_amt   Decimal? @db.Decimal // 최초 선사업비
+  po_f_cc_total     Decimal? @db.Decimal // 최초 원가센터 합계
+  po_f_cc_jun_amt   Decimal? @db.Decimal // 최초 원가센터 전사
+  po_f_cc_bumun_amt Decimal? @db.Decimal // 최초 원가센터 부문
+  po_f_cc_sil_amt   Decimal? @db.Decimal // 최초 원가센터 실
+  po_f_cc_bu_amt    Decimal? @db.Decimal // 최초 원가센터 BU
+  po_f_cc_team_amt  Decimal? @db.Decimal // 최초 원가센터 팀
+  po_f_biz_prof     Decimal? @db.Decimal // 최초 사업이익
+  po_f_fin_amt      Decimal  @db.Decimal // 최초 금융비용
+  po_f_pre_tax_prof Decimal? @db.Decimal // 최초 세전이익
+  // @@schema("proj")
+
+  @@map("po_cont_est_profit_fst_v")
+}
+
+// 최종계약 손익 view
+view po_cont_est_profit_lst_v {
+  pjt_cd            String   @db.VarChar(15) // 프로젝트코드
+  wbs_cd            String   @db.VarChar(15) // WBS 코드
+  est_ver           Decimal? @db.Decimal // 견적버전
+  po_l_rev_amt      Decimal? @db.Decimal // 최종 매출액
+  po_l_mcost_amt    Decimal? @db.Decimal // 최종 재료비
+  po_l_hcost_amt    Decimal? @db.Decimal // 최종 공통비
+  po_l_lcost_amt    Decimal? @db.Decimal // 최종 노무비
+  po_l_mm_amt       Decimal? @db.Decimal // 최종 M/M
+  po_l_ecost_amt    Decimal? @db.Decimal // 최종 경비
+  po_l_rev_d_prof   Decimal? @db.Decimal // 최종 매출원가차이
+  po_l_etc_amt      Decimal? @db.Decimal // 최종 기타
+  po_l_prebiz_amt   Decimal? @db.Decimal // 최종 선사업비
+  po_l_cc_total     Decimal? @db.Decimal // 최종 원가센터 합계
+  po_l_cc_jun_amt   Decimal? @db.Decimal // 최종 원가센터 전사
+  po_l_cc_bumun_amt Decimal? @db.Decimal // 최종 원가센터 부문
+  po_l_cc_sil_amt   Decimal? @db.Decimal // 최종 원가센터 실
+  po_l_cc_bu_amt    Decimal? @db.Decimal // 최종 원가센터 BU
+  po_l_cc_team_amt  Decimal? @db.Decimal // 최종 원가센터 팀
+  po_l_biz_prof     Decimal? @db.Decimal // 최종 사업이익
+  po_f_fin_amt      Decimal  @db.Decimal // 금융비용
+  po_f_pre_tax_prof Decimal? @db.Decimal // 세전이익
+  // @@schema("proj")
+
+  @@map("po_cont_est_profit_lst_v")
+}
+
+/// 파일 정보 (SQLite용으로 추가된 테이블, PostgreSQL에서도 유지)
+model FileInfo {
+  id           String   @id @default(uuid()) @db.Uuid // 파일 ID
+  size         Int // 파일 크기
+  filename     String // 파일명
+  mimetype     String // MIME 타입
+  filePath     String? // 파일 경로
+  originalname String // 원본 파일명
+  createdAt    DateTime @default(now()) // 생성일시
+}
